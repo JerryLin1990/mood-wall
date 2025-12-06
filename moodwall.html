@@ -954,6 +954,7 @@
           const ctx = canvas.getContext('2d');
           const cardMood = parseInt(el.dataset.mood) || 3;
           const emojiMap = { 1: '😫', 2: '🙁', 3: '😐', 4: '🙂', 5: '😄' };
+          console.log('Mood:', cardMood, 'Emoji:', emojiMap[cardMood]);
           const x = (320 - 15) * 2;
           const y = (410 - 12 - 28) * 2;
           ctx.font = '56px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif';
