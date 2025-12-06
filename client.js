@@ -454,6 +454,21 @@ function setupCardInteraction(cardEl, id, initialX, initialY, initialR) {
         e.stopPropagation();
         let clone;
         try {
+            // Clone strategy to avoid visual glitches and cropping
+            clone = cardEl.cloneNode(true);
+
+            // Clean up clone styles for capture
+            clone.classList.remove('printing', 'expanded');
+            clone.style.position = 'fixed';
+            clone.style.left = '-9999px'; // Off-screen
+            clone.style.top = '0';
+            clone.style.transform = 'none';
+            clone.style.transition = 'none';
+            clone.style.zIndex = '99999';
+            clone.style.margin = '0';
+
+            // Remove control buttons from clone
+            clone.querySelectorAll('.delete-btn, .save-btn').forEach(b => b.remove());
 
             document.body.appendChild(clone);
 
