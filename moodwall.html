@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>每日心情卡片牆 — 復古打字機（浮水印修復版）</title>
+  <title>每日心情卡片牆</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
     :root {
@@ -889,24 +889,33 @@
       const save = clone.querySelector('.save-btn');
       if (save) save.remove();
 
-      // Reset styles for capture to ensure full visibility
-      clone.style.transform = 'none';
-      clone.style.position = 'fixed';
-      clone.style.left = '0';
-      clone.style.top = '0';
-      clone.style.zIndex = '99999';
-      clone.style.margin = '0';
+      // Create a container to hold the card for capturing
+      // This container ensures the card is isolated and at 0,0
+      const container = document.createElement('div');
+      container.style.position = 'fixed';
+      container.style.top = '0';
+      container.style.left = '0';
+      container.style.zIndex = '-9999';
+      container.style.padding = '20px'; // Add padding for shadow
+      container.style.background = 'transparent';
 
-      document.body.appendChild(clone);
+      // Reset card styles
+      clone.style.position = 'relative'; // Inside container
+      clone.style.transform = 'none';
+      clone.style.margin = '0';
+      clone.style.left = 'auto';
+      clone.style.top = 'auto';
+
+      container.appendChild(clone);
+      document.body.appendChild(container);
 
       html2canvas(clone, {
         backgroundColor: null,
-        scale: 3, // Higher quality
+        scale: 3,
+        logging: false,
         useCORS: true,
-        x: 0,
-        y: 0,
-        width: clone.offsetWidth,
-        height: clone.offsetHeight
+        scrollX: 0,
+        scrollY: 0
       }).then(canvas => {
         const now = new Date();
         const ts = now.getFullYear() +
@@ -919,11 +928,11 @@
         link.download = `mood-card-${ts}.png`;
         link.href = canvas.toDataURL();
         link.click();
-        document.body.removeChild(clone);
+        document.body.removeChild(container);
       }).catch(err => {
         console.error('Download failed', err);
         alert('下載失敗');
-        if (document.body.contains(clone)) document.body.removeChild(clone);
+        if (document.body.contains(container)) document.body.removeChild(container);
       });
     }
 
