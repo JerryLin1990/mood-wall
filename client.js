@@ -504,5 +504,8 @@ window.MOOD_EMOJIS = {
 window.PRESET_SVGS = [
     '<svg viewBox="0 0 100 100" width="100%" height="100%"><circle cx="50" cy="50" r="40" fill="#FFCC00"/><circle cx="35" cy="40" r="5" fill="#333"/><circle cx="65" cy="40" r="5" fill="#333"/><path d="M 30 65 Q 50 85 70 65" stroke="#333" stroke-width="4" fill="none"/></svg>',
     '<svg viewBox="0 0 100 100" width="100%" height="100%"><rect x="20" y="20" width="60" height="60" fill="#87CEEB"/><path d="M 20 80 L 40 50 L 60 70 L 80 40 L 80 80 Z" fill="#228B22"/><circle cx="70" cy="35" r="8" fill="#FFD700"/></svg>',
-    '<svg viewBox="0 0 100 100" width="100%" height="100%"><circle cx="50" cy="50" r="45" fill="#E6E6FA"/><path d="M 30 30 L 70 70 M 70 30 L 30 70" stroke="#9370DB" stroke-width="10" stroke-linecap="round"/></svg>'
+    '<svg viewBox="0 0 100 100" width="100%" height="100%"><circle cx="50" cy="50" r="45" fill="#E6E6FA"/><path d="M 30 30 L 70 70 M 70 30 L 30 70" stroke="#9370DB" stroke-width="10" stroke-linecap="round"/></svg>',
+    '<svg viewBox="0 0 100 100" width="100%" height="100%"><rect x="10" y="10" width="80" height="80" rx="20" fill="#FFB7B2"/><circle cx="30" cy="30" r="5" fill="#FFF"/><circle cx="70" cy="30" r="5" fill="#FFF"/><path d="M 30 60 Q 50 80 70 60" stroke="#FFF" stroke-width="4" fill="none"/></svg>',
+    '<svg viewBox="0 0 100 100" width="100%" height="100%"><circle cx="50" cy="50" r="40" fill="#B5EAD7"/><rect x="30" y="30" width="40" height="10" fill="#FFF"/><rect x="30" y="50" width="40" height="10" fill="#FFF"/><rect x="30" y="70" width="40" height="10" fill="#FFF"/></svg>',
+    '<svg viewBox="0 0 100 100" width="100%" height="100%"><polygon points="50,15 90,85 10,85" fill="#C7CEEA"/><circle cx="50" cy="55" r="15" fill="#FFF" opacity="0.6"/></svg>'
 ];
