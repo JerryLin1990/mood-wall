@@ -778,7 +778,11 @@
       const del = el.querySelector('.delete-btn');
       del.addEventListener('click', (e) => {
         e.stopPropagation();
-        if (confirm('確定刪除此卡片？')) { el.remove(); deleteCard(el.dataset.cardId); }
+        if (confirm('確定刪除此卡片？')) {
+          el.remove();
+          deleteCard(el.dataset.cardId);
+          if (overlay.classList.contains('active')) overlay.classList.remove('active');
+        }
       });
 
       // Double click to expand
