@@ -29,6 +29,17 @@ app.get('/env-config.js', (req, res) => {
 
 // Middleware
 app.use(cors());
+
+// Security: Block access to hidden files and sensitive source code
+app.use((req, res, next) => {
+    if (req.path.startsWith('/.') || // Block .env, .git, etc.
+        req.path.includes('app.js') ||
+        req.path.includes('package.json') ||
+        req.path.includes('package-lock.json')) {
+        return res.status(403).send('Forbidden');
+    }
+    next();
+});
 app.use(express.json({ limit: '50mb' })); // Increase limit for images
 app.use(express.static('.')); // Serve static files
 
@@ -123,7 +134,9 @@ app.post('/api/cards', async (req, res) => {
 
         const row = [
             card.id,
-            card.text || '',
+            card.id,
+            // Security: Sanitize text to prevent CSV Injection (Formula Injection)
+            (card.text && /^[\=\+\-\@]/.test(card.text)) ? "'" + card.text : (card.text || ''),
             card.mood,
             card.style,
             card.header || '',
