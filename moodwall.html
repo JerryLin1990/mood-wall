@@ -623,14 +623,28 @@
       if (el) { el.classList.add('pressed'); setTimeout(() => el.classList.remove('pressed'), 100); }
     }
 
-    /* Input Sync */
+    /* Input Sync with Limits */
     hiddenInput.addEventListener('input', () => {
       let val = hiddenInput.value;
       const lines = val.split('\n');
-      if (lines.length > 10) {
-        val = lines.slice(0, 10).join('\n');
+      const MAX_LINES = 9;
+      const MAX_CHARS_PER_LINE = 14; // Approximate for typewriter width
+
+      // Enforce line count
+      if (lines.length > MAX_LINES) {
+        val = lines.slice(0, MAX_LINES).join('\n');
+      }
+
+      // Enforce line length (simple truncation)
+      const truncatedLines = val.split('\n').map(line => {
+        return line.length > MAX_CHARS_PER_LINE ? line.slice(0, MAX_CHARS_PER_LINE) : line;
+      });
+      val = truncatedLines.join('\n');
+
+      if (hiddenInput.value !== val) {
         hiddenInput.value = val;
       }
+
       typedText.textContent = val;
       if (!val) typedText.innerHTML = '<span style="color:#999">點此輸入心情...</span>';
       else typedText.style.color = '#2b2b2b';
@@ -802,6 +816,9 @@
       let isDown = false, offX, offY;
       el.addEventListener('mousedown', e => {
         if (e.target.classList.contains('delete-btn')) return;
+        // Fix: Prevent default drag behavior on images to avoid sticking
+        if (e.target.tagName === 'IMG') e.preventDefault();
+
         isDown = true; offX = e.clientX - el.offsetLeft; offY = e.clientY - el.offsetTop;
         el.style.zIndex = 1000; el.style.transition = 'none';
       });
