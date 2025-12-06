@@ -371,25 +371,24 @@
       line-height: 1;
     }
 
-    /* Expanded Card Style - Fix Z-Index */
+    /* Expanded Card Style - Responsive Scale */
     .card.expanded {
       position: fixed !important;
       top: 50% !important;
       left: 50% !important;
-      transform: translate(-50%, -50%) scale(1) !important;
+      transform: translate(-50%, -50%) scale(1.5) !important;
+      /* Desktop default: 1.5x */
       z-index: 10001 !important;
-      /* Higher than typewriter (z-index 60) and printing (1000) */
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
       cursor: default;
     }
 
-    /* Overlay for expanded mode - Fix Z-Index */
+    /* Overlay for expanded mode */
     #overlay {
       position: fixed;
       inset: 0;
       background: rgba(0, 0, 0, 0.5);
       z-index: 10000;
-      /* Higher than typewriter */
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.3s;
@@ -449,6 +448,11 @@
         --typewriter-width: 100%;
         --card-width: 260px;
         --card-height: 340px;
+      }
+
+      /* Mobile expanded scale */
+      .card.expanded {
+        transform: translate(-50%, -50%) scale(1.1) !important;
       }
 
       .keyboard-base .key {
@@ -789,7 +793,7 @@
         <div class="save-btn" title="下載">⬇</div>
         <div class="photo">${imgHtml}</div>
         <div class="text">${text}</div>
-        <div class="mood-badge">${moodIcons[currentMood] || ''}</div>
+        <div class="mood-badge">${moodIcons[d.mood] || ''}</div>
     `;
 
       const tx = Math.random() * (window.innerWidth - 340) + 20;
@@ -885,27 +889,41 @@
       const save = clone.querySelector('.save-btn');
       if (save) save.remove();
 
-      // Reset transform to scale(1) and remove rotation for clean capture
-      clone.style.transform = 'scale(1)';
+      // Reset styles for capture to ensure full visibility
+      clone.style.transform = 'none';
       clone.style.position = 'fixed';
-      clone.style.top = '-9999px';
-      clone.style.left = '-9999px';
+      clone.style.left = '0';
+      clone.style.top = '0';
       clone.style.zIndex = '99999';
+      clone.style.margin = '0';
+
       document.body.appendChild(clone);
 
       html2canvas(clone, {
-        backgroundColor: null, // Transparent background if card has transparency
-        scale: 2 // Higher quality
+        backgroundColor: null,
+        scale: 3, // Higher quality
+        useCORS: true,
+        x: 0,
+        y: 0,
+        width: clone.offsetWidth,
+        height: clone.offsetHeight
       }).then(canvas => {
+        const now = new Date();
+        const ts = now.getFullYear() +
+          (now.getMonth() + 1).toString().padStart(2, '0') +
+          now.getDate().toString().padStart(2, '0') + '-' +
+          now.getHours().toString().padStart(2, '0') +
+          now.getMinutes().toString().padStart(2, '0');
+
         const link = document.createElement('a');
-        link.download = 'mood-card.png';
+        link.download = `mood-card-${ts}.png`;
         link.href = canvas.toDataURL();
         link.click();
         document.body.removeChild(clone);
       }).catch(err => {
         console.error('Download failed', err);
         alert('下載失敗');
-        document.body.removeChild(clone);
+        if (document.body.contains(clone)) document.body.removeChild(clone);
       });
     }
 
