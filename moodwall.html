@@ -771,6 +771,7 @@
       const cardEl = document.createElement('div');
       cardEl.className = `card ${currentStyle} printing`;
       cardEl.dataset.cardId = cardId;
+      cardEl.dataset.mood = currentMood;
 
       let imgHtml = '';
       if (currentBase64Parts) {
@@ -948,6 +949,18 @@
         }).then(canvas => {
           console.log('Canvas created:', canvas.width, 'x', canvas.height);
 
+
+          // Draw emoji on canvas
+          const ctx = canvas.getContext('2d');
+          const cardMood = parseInt(el.dataset.mood) || 3;
+          const emojiMap = { 1: '😫', 2: '🙁', 3: '😐', 4: '🙂', 5: '😄' };
+          const x = (320 - 15) * 2;
+          const y = (410 - 12 - 28) * 2;
+          ctx.font = '56px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif';
+          ctx.textAlign = 'right';
+          ctx.textBaseline = 'top';
+          ctx.fillText(emojiMap[cardMood] || '', x, y);
+
           const now = new Date();
           const ts = now.getFullYear() +
             (now.getMonth() + 1).toString().padStart(2, '0') +
@@ -1007,6 +1020,7 @@
           const el = document.createElement('div');
           el.className = `card ${d.style || 'polaroid'}`;
           el.dataset.cardId = d.id;
+          el.dataset.mood = d.mood;
           el.style.left = d.x + 'px'; el.style.top = d.y + 'px';
           const r = d.r || 0;
           el.style.transform = `rotate(${r}deg) scale(0.3)`;
