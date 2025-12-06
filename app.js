@@ -21,7 +21,11 @@ app.get('/', (req, res) => {
 app.get('/env-config.js', (req, res) => {
     const config = {
         MAX_CARDS: MAX_CARDS,
-        MAX_IMAGE_SIZE_KB: process.env.MAX_IMAGE_SIZE_KB || 100 // Send raw KB value
+        MAX_IMAGE_SIZE_KB: process.env.MAX_IMAGE_SIZE_KB || 100, // Send raw KB value
+        // Debugging: Expose ports
+        PORT: process.env.PORT,
+        WEB_PORT: process.env.WEB_PORT,
+        EXPECTED_PORT: 8080
     };
     res.set('Content-Type', 'application/javascript');
     res.send(`window.ENV = ${JSON.stringify(config)};`);
@@ -258,6 +262,8 @@ async function getSheetId(sheetName) {
 
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`env.PORT: ${process.env.PORT}`);
+    console.log(`env.WEB_PORT: ${process.env.WEB_PORT}`);
     console.log(`MAX_CARDS: ${MAX_CARDS}`);
     console.log(`MAX_IMAGE_SIZE: ${MAX_IMAGE_SIZE_BYTES / 1024} KB`);
 });
