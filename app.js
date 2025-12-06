@@ -18,17 +18,29 @@ const GOOGLE_CLIENT_EMAIL = process.env.GOOGLE_SA_CLIENT_EMAIL;
 const GOOGLE_PRIVATE_KEY = process.env.GOOGLE_SA_PRIVATE_KEY ? process.env.GOOGLE_SA_PRIVATE_KEY.replace(/\\n/g, '\n') : null;
 
 let sheets;
+
+// Diagnosis Log for Deployment
+console.log('--- Google Sheets Config Check ---');
+console.log('SHEET_ID:', SHEET_ID ? 'Set' : 'MISSING');
+console.log('CLIENT_EMAIL:', GOOGLE_CLIENT_EMAIL ? 'Set' : 'MISSING');
+console.log('PRIVATE_KEY:', GOOGLE_PRIVATE_KEY ? 'Set (Length: ' + GOOGLE_PRIVATE_KEY.length + ')' : 'MISSING');
+
 if (SHEET_ID && GOOGLE_CLIENT_EMAIL && GOOGLE_PRIVATE_KEY) {
-    const auth = new google.auth.GoogleAuth({
-        credentials: {
-            client_email: GOOGLE_CLIENT_EMAIL,
-            private_key: GOOGLE_PRIVATE_KEY,
-        },
-        scopes: ['https://www.googleapis.com/auth/spreadsheets'],
-    });
-    sheets = google.sheets({ version: 'v4', auth });
+    try {
+        const auth = new google.auth.GoogleAuth({
+            credentials: {
+                client_email: GOOGLE_CLIENT_EMAIL,
+                private_key: GOOGLE_PRIVATE_KEY,
+            },
+            scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+        });
+        sheets = google.sheets({ version: 'v4', auth });
+        console.log('Google Sheets Client Initialized.');
+    } catch (authError) {
+        console.error('Google Auth Init Failed:', authError.message);
+    }
 } else {
-    console.warn('WARNING: Google Sheets credentials missing. Cards will not be saved to Sheets.');
+    console.error('CRITICAL ERROR: Google Sheets credentials incomplete. App will return 503 for write operations.');
 }
 
 // --- Google Sheets Helpers (Dynamic Sheet Name) ---
