@@ -381,8 +381,10 @@ function setupCardInteraction(cardEl, id, initialX, initialY, initialR) {
     function dragStart(e) {
         if (e.target.classList.contains('delete-btn') || e.target.classList.contains('save-btn')) return;
 
-        // Bring to front
-        cardsLayer.appendChild(cardEl);
+        // Bring to front only if needed (prevents dblclick interference)
+        if (cardsLayer.lastElementChild !== cardEl) {
+            cardsLayer.appendChild(cardEl);
+        }
 
         isDragging = true;
         const evt = e.touches ? e.touches[0] : e;
