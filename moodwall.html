@@ -306,9 +306,7 @@
       width: 100%;
       height: 100%;
       object-fit: contain;
-      /* 修正：完整顯示不裁切 */
       background: #000;
-      /* 修正：黑底補邊 */
     }
 
     .card .text {
@@ -377,7 +375,6 @@
       top: 50% !important;
       left: 50% !important;
       transform: translate(-50%, -50%) scale(1.5) !important;
-      /* Desktop default: 1.5x */
       z-index: 10001 !important;
       box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
       cursor: default;
@@ -450,7 +447,6 @@
         --card-height: 340px;
       }
 
-      /* Mobile expanded scale */
       .card.expanded {
         transform: translate(-50%, -50%) scale(1.1) !important;
       }
@@ -566,8 +562,6 @@
   <input id="file-input" type="file" accept="image/*" style="display:none" />
 
   <script>
-    /* 修復版：增加浮水印描邊與邊距 */
-
     const MAX_CARDS = 7;
     const TARGET_IMAGE_MAX_BYTES = 100 * 1024;
     const API_URL = 'http://localhost:3000/api/cards';
@@ -599,11 +593,6 @@
 
     function adjustLayout() {
       const w = window.innerWidth;
-      // Base width for typewriter is around 380px. 
-      // Scale down more aggressively for mobile to save space
-      // User requested ~40% smaller than previous.
-      // Previous Desktop: 0.8 -> New: 0.5
-      // Previous Mobile: (w-20)/380 -> New: (w-20)/380 * 0.6
       let scale = 0.5;
       if (w < 420) {
         scale = ((w - 20) / 380) * 0.6;
@@ -614,7 +603,6 @@
     function focusInput() { hiddenInput.focus(); }
     paperDiv.addEventListener('click', focusInput);
 
-    // Click background to restore
     overlay.addEventListener('click', () => {
       document.querySelectorAll('.card.expanded').forEach(c => c.classList.remove('expanded'));
       overlay.classList.remove('active');
@@ -634,12 +622,12 @@
       }
     });
 
-    /* Keyboard Listener */
     document.addEventListener('keydown', (e) => {
       if (e.isComposing) return;
       focusInput();
       visualKeyPress(e.key);
     });
+
     function visualKeyPress(keyStr) {
       let selector = `[data-key="${keyStr}"]`;
       if (keyStr === ' ') selector = `[data-key=" "]`;
@@ -648,25 +636,27 @@
       if (el) { el.classList.add('pressed'); setTimeout(() => el.classList.remove('pressed'), 100); }
     }
 
-    /* Input Sync with Limits and IME Support */
+    /* Fixed IME Input handling */
     let isComposing = false;
-    hiddenInput.addEventListener('compositionstart', () => isComposing = true);
+
+    hiddenInput.addEventListener('compositionstart', () => {
+      isComposing = true;
+    });
+
     hiddenInput.addEventListener('compositionend', () => {
       isComposing = false;
-      // Do NOT dispatch input event manually here to avoid double-fire issues
-      // Just run the update logic directly
-      updateInputDisplay();
     });
 
     hiddenInput.addEventListener('input', () => {
+      // During composition, just show what user is typing without modification
       if (isComposing) {
         typedText.textContent = hiddenInput.value;
+        if (!hiddenInput.value) typedText.innerHTML = '<span style="color:#999">點此輸入心情...</span>';
+        else typedText.style.color = '#2b2b2b';
         return;
       }
-      updateInputDisplay();
-    });
 
-    function updateInputDisplay() {
+      // After composition ends, apply limits
       let val = hiddenInput.value;
       const lines = val.split('\n');
       const MAX_LINES = 9;
@@ -681,7 +671,6 @@
       });
       val = truncatedLines.join('\n');
 
-      // Only update value if it actually changed to avoid resetting cursor/IME state
       if (hiddenInput.value !== val) {
         hiddenInput.value = val;
       }
@@ -689,7 +678,7 @@
       typedText.textContent = val;
       if (!val) typedText.innerHTML = '<span style="color:#999">點此輸入心情...</span>';
       else typedText.style.color = '#2b2b2b';
-    }
+    });
 
     /* Mood & Style */
     moodButtons.forEach(btn => {
@@ -701,7 +690,7 @@
     });
     styleSelect.addEventListener('change', (e) => currentStyle = e.target.value);
 
-    /* Image Processing with Improved Watermark */
+    /* Image Processing */
     btnUpload.addEventListener('click', (e) => { e.stopPropagation(); fileInput.click(); });
     fileInput.addEventListener('change', async (e) => {
       const f = e.target.files[0];
@@ -744,7 +733,6 @@
       return { mime: blob.type, parts: parts, header: header, sizeBytes: blob.size };
     }
 
-    /* 修正後的浮水印繪製：增加描邊與邊距 */
     function drawAndWatermark(imgBitmap, w, h, q) {
       return new Promise(resolve => {
         const cvs = document.createElement('canvas');
@@ -752,7 +740,6 @@
         const ctx = cvs.getContext('2d');
         ctx.drawImage(imgBitmap, 0, 0, w, h);
 
-        // Fix: Use local time
         const now = new Date();
         const ts = now.getFullYear() + '-' +
           (now.getMonth() + 1).toString().padStart(2, '0') + '-' +
@@ -760,16 +747,13 @@
           now.getHours().toString().padStart(2, '0') + ':' +
           now.getMinutes().toString().padStart(2, '0');
 
-        // 字體大小：至少20px，或根據寬度調整
         const fontSize = Math.max(20, Math.round(w * 0.035));
         ctx.font = `bold ${fontSize}px "Courier New", monospace`;
         ctx.textAlign = 'right';
         ctx.textBaseline = 'bottom';
 
-        // 修正：增加描邊 (Stroke) 以確保可視性
-        ctx.strokeStyle = 'rgba(0,0,0,0.8)'; // 加深描邊
-        ctx.lineWidth = Math.max(3, fontSize * 0.2); // 加粗描邊
-        // 增加邊距至 w-20, h-20，避免貼邊
+        ctx.strokeStyle = 'rgba(0,0,0,0.8)';
+        ctx.lineWidth = Math.max(3, fontSize * 0.2);
         ctx.strokeText(ts, w - 20, h - 20);
 
         ctx.fillStyle = '#ffffff';
@@ -785,7 +769,6 @@
     /* Printing */
     printBtn.addEventListener('click', () => {
       const text = hiddenInput.value.trim();
-      // Fix: Count ALL cards to strictly enforce limit
       const existingCards = document.querySelectorAll('.card');
       if (existingCards.length >= MAX_CARDS) { alert(`心情牆已滿 (${MAX_CARDS}張)！請先刪除舊卡片。`); return; }
       if (!text && !currentBase64Parts) { alert('請寫點東西或上傳圖片'); focusInput(); return; }
@@ -822,7 +805,7 @@
         cardEl.classList.remove('printing');
         cardEl.style.left = tx + 'px';
         cardEl.style.top = ty + 'px';
-        cardEl.style.transform = `rotate(${rot}deg) scale(0.3)`; // Default small scale
+        cardEl.style.transform = `rotate(${rot}deg) scale(0.3)`;
 
         saveCard({
           id: cardId, text, mood: currentMood, style: currentStyle,
@@ -856,12 +839,9 @@
         });
       }
 
-      // Double click to expand
       el.addEventListener('dblclick', (e) => {
         e.stopPropagation();
-        // Close others
         document.querySelectorAll('.card.expanded').forEach(c => c.classList.remove('expanded'));
-
         el.classList.add('expanded');
         overlay.classList.add('active');
       });
@@ -873,7 +853,6 @@
       let isDown = false, offX, offY;
       el.addEventListener('mousedown', e => {
         if (e.target.classList.contains('delete-btn') || e.target.classList.contains('save-btn')) return;
-        // Fix: Prevent default drag behavior on images to avoid sticking
         if (e.target.tagName === 'IMG') e.preventDefault();
 
         isDown = true; offX = e.clientX - el.offsetLeft; offY = e.clientY - el.offsetTop;
@@ -885,71 +864,71 @@
           isDown = false;
           el.style.zIndex = '';
           el.style.transition = 'transform 0.1s';
-          // Extract rotation from transform
           const match = el.style.transform.match(/rotate\((.*?)deg\)/);
           const r = match ? parseFloat(match[1]) : 0;
-          // Ensure we keep the scale(0.3) when saving/updating position visually
           el.style.transform = `rotate(${r}deg) scale(0.3)`;
           updateCardPos(el.dataset.cardId, el.style.left, el.style.top, r);
         }
       });
     }
 
+    /* Fixed Card Download */
     function downloadCard(el) {
-      // Clone to avoid modifying the visible card
       const clone = el.cloneNode(true);
 
-      // Remove buttons from clone
       const del = clone.querySelector('.delete-btn');
       if (del) del.remove();
       const save = clone.querySelector('.save-btn');
       if (save) save.remove();
 
-      // Create a container to hold the card for capturing
-      // This container ensures the card is isolated and at 0,0
-      const container = document.createElement('div');
-      container.style.position = 'fixed';
-      container.style.top = '0';
-      container.style.left = '0';
-      container.style.zIndex = '99999'; // High z-index to be visible
-      container.style.padding = '50px'; // Add padding for shadow
-      container.style.background = 'transparent';
+      const wrapper = document.createElement('div');
+      wrapper.style.position = 'fixed';
+      wrapper.style.top = '0';
+      wrapper.style.left = '0';
+      wrapper.style.width = 'auto';
+      wrapper.style.height = 'auto';
+      wrapper.style.zIndex = '999999';
+      wrapper.style.background = 'white';
+      wrapper.style.padding = '50px';
 
-      // Reset card styles
-      clone.style.position = 'relative'; // Inside container
+      clone.style.position = 'static';
       clone.style.transform = 'none';
-      clone.style.margin = '0';
       clone.style.left = 'auto';
       clone.style.top = 'auto';
+      clone.style.margin = '0';
 
-      container.appendChild(clone);
-      document.body.appendChild(container);
+      wrapper.appendChild(clone);
+      document.body.appendChild(wrapper);
 
-      html2canvas(container, { // Capture the container instead of just clone
-        backgroundColor: null,
-        scale: 3,
-        logging: false,
-        useCORS: true,
-        scrollX: 0,
-        scrollY: 0
-      }).then(canvas => {
-        const now = new Date();
-        const ts = now.getFullYear() +
-          (now.getMonth() + 1).toString().padStart(2, '0') +
-          now.getDate().toString().padStart(2, '0') + '-' +
-          now.getHours().toString().padStart(2, '0') +
-          now.getMinutes().toString().padStart(2, '0');
+      setTimeout(() => {
+        html2canvas(wrapper, {
+          backgroundColor: '#ffffff',
+          scale: 2,
+          logging: true,
+          useCORS: true,
+          allowTaint: true,
+          width: wrapper.offsetWidth,
+          height: wrapper.offsetHeight
+        }).then(canvas => {
+          const now = new Date();
+          const ts = now.getFullYear() +
+            (now.getMonth() + 1).toString().padStart(2, '0') +
+            now.getDate().toString().padStart(2, '0') + '-' +
+            now.getHours().toString().padStart(2, '0') +
+            now.getMinutes().toString().padStart(2, '0');
 
-        const link = document.createElement('a');
-        link.download = `mood-card-${ts}.png`;
-        link.href = canvas.toDataURL();
-        link.click();
-        document.body.removeChild(container);
-      }).catch(err => {
-        console.error('Download failed', err);
-        alert('下載失敗');
-        if (document.body.contains(container)) document.body.removeChild(container);
-      });
+          const link = document.createElement('a');
+          link.download = `mood-card-${ts}.png`;
+          link.href = canvas.toDataURL('image/png');
+          link.click();
+
+          document.body.removeChild(wrapper);
+        }).catch(err => {
+          console.error('Download failed', err);
+          alert('下載失敗: ' + err.message);
+          if (document.body.contains(wrapper)) document.body.removeChild(wrapper);
+        });
+      }, 100);
     }
 
     /* API Integration */
@@ -992,7 +971,6 @@
           el.className = `card ${d.style || 'polaroid'}`;
           el.dataset.cardId = d.id;
           el.style.left = d.x + 'px'; el.style.top = d.y + 'px';
-          // Fix: Ensure r has a value and force scale(0.3)
           const r = d.r || 0;
           el.style.transform = `rotate(${r}deg) scale(0.3)`;
 
