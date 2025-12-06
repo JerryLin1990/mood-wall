@@ -29,7 +29,6 @@
       overflow: hidden;
     }
 
-    /* 1. 心情牆：全螢幕 */
     #mood-wall {
       position: absolute;
       inset: 0;
@@ -42,7 +41,6 @@
       overflow: auto;
     }
 
-    /* 卡片層 */
     .cards-layer {
       position: relative;
       width: 100%;
@@ -50,7 +48,6 @@
       pointer-events: auto;
     }
 
-    /* 2. 打字機容器 */
     .typewriter-container {
       position: fixed;
       left: 50%;
@@ -66,7 +63,6 @@
       transition: transform 0.2s;
     }
 
-    /* 機身實體 */
     .typewriter-body {
       pointer-events: auto;
       width: 100%;
@@ -81,7 +77,6 @@
       gap: 8px;
     }
 
-    /* 滾筒區 */
     .roller-area {
       position: relative;
       width: 100%;
@@ -118,7 +113,6 @@
       transform: rotate(5deg) translateY(5px);
     }
 
-    /* 紙張 (輸入區) */
     .paper {
       position: relative;
       width: 94%;
@@ -163,7 +157,6 @@
       cursor: pointer;
     }
 
-    /* 控制列 */
     .controls-row {
       display: flex;
       justify-content: space-between;
@@ -175,7 +168,6 @@
       z-index: 10;
     }
 
-    /* 心情按鈕 */
     .mood-group {
       display: flex;
       gap: 4px;
@@ -207,7 +199,6 @@
       box-shadow: 0 0 8px #ffd700;
     }
 
-    /* 列印按鈕 */
     .print-btn {
       background: #d9534f;
       color: #fff;
@@ -225,7 +216,6 @@
       box-shadow: none;
     }
 
-    /* 風格選擇 */
     .style-select select {
       background: #eee;
       border: none;
@@ -236,7 +226,6 @@
       font-weight: bold;
     }
 
-    /* 鍵盤區 */
     .keyboard-base {
       background: #4A4A4A;
       padding: 10px 5px 15px;
@@ -276,7 +265,6 @@
       background: #c0c0c0;
     }
 
-    /* ======== 卡片樣式 ======== */
     .card {
       width: var(--card-width);
       height: var(--card-height);
@@ -328,7 +316,6 @@
       filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.1));
     }
 
-    /* 按鈕樣式 */
     .card .delete-btn {
       position: absolute;
       top: -12px;
@@ -369,7 +356,6 @@
       line-height: 1;
     }
 
-    /* Expanded Card Style - Responsive Scale */
     .card.expanded {
       position: fixed !important;
       top: 50% !important;
@@ -380,7 +366,6 @@
       cursor: default;
     }
 
-    /* Overlay for expanded mode */
     #overlay {
       position: fixed;
       inset: 0;
@@ -396,7 +381,6 @@
       pointer-events: auto;
     }
 
-    /* 列印動畫 */
     @keyframes slow-print {
       0% {
         opacity: 0;
@@ -427,7 +411,6 @@
       pointer-events: none;
     }
 
-    /* 隱藏輸入框 */
     #hidden-input {
       position: absolute;
       opacity: 0;
@@ -439,7 +422,6 @@
       padding: 0;
     }
 
-    /* RWD */
     @media (max-width: 768px) {
       :root {
         --typewriter-width: 100%;
@@ -566,7 +548,6 @@
     const TARGET_IMAGE_MAX_BYTES = 100 * 1024;
     const API_URL = 'http://localhost:3000/api/cards';
 
-    /* UI Elements */
     const typedText = document.getElementById('typed-text');
     const hiddenInput = document.getElementById('hidden-input');
     const paperDiv = document.getElementById('paper');
@@ -583,7 +564,6 @@
     let currentStyle = 'polaroid';
     let currentBase64Parts = null;
 
-    /* Init & Focus */
     window.onload = () => {
       loadCards();
       focusInput();
@@ -636,27 +616,39 @@
       if (el) { el.classList.add('pressed'); setTimeout(() => el.classList.remove('pressed'), 100); }
     }
 
-    /* Fixed IME Input handling */
+    /* FIXED: IME Input handling - Critical fix for composition */
     let isComposing = false;
 
     hiddenInput.addEventListener('compositionstart', () => {
+      console.log('Composition started');
       isComposing = true;
     });
 
     hiddenInput.addEventListener('compositionend', () => {
+      console.log('Composition ended');
       isComposing = false;
+      // Force update after composition ends
+      setTimeout(() => {
+        applyInputLimits();
+      }, 0);
     });
 
-    hiddenInput.addEventListener('input', () => {
-      // During composition, just show what user is typing without modification
+    hiddenInput.addEventListener('input', (e) => {
+      console.log('Input event, isComposing:', isComposing, 'value:', hiddenInput.value);
+
+      // CRITICAL: During composition, ONLY update display, DO NOT modify value
       if (isComposing) {
         typedText.textContent = hiddenInput.value;
         if (!hiddenInput.value) typedText.innerHTML = '<span style="color:#999">點此輸入心情...</span>';
         else typedText.style.color = '#2b2b2b';
-        return;
+        return; // Return early without modifying value
       }
 
-      // After composition ends, apply limits
+      // Only apply limits when NOT composing
+      applyInputLimits();
+    });
+
+    function applyInputLimits() {
       let val = hiddenInput.value;
       const lines = val.split('\n');
       const MAX_LINES = 9;
@@ -672,15 +664,16 @@
       val = truncatedLines.join('\n');
 
       if (hiddenInput.value !== val) {
+        const cursorPos = hiddenInput.selectionStart;
         hiddenInput.value = val;
+        hiddenInput.setSelectionRange(Math.min(cursorPos, val.length), Math.min(cursorPos, val.length));
       }
 
       typedText.textContent = val;
       if (!val) typedText.innerHTML = '<span style="color:#999">點此輸入心情...</span>';
       else typedText.style.color = '#2b2b2b';
-    });
+    }
 
-    /* Mood & Style */
     moodButtons.forEach(btn => {
       btn.addEventListener('click', () => {
         moodButtons.forEach(b => b.classList.remove('active'));
@@ -690,7 +683,6 @@
     });
     styleSelect.addEventListener('change', (e) => currentStyle = e.target.value);
 
-    /* Image Processing */
     btnUpload.addEventListener('click', (e) => { e.stopPropagation(); fileInput.click(); });
     fileInput.addEventListener('change', async (e) => {
       const f = e.target.files[0];
@@ -766,7 +758,6 @@
     function blobToDataURL(blob) { return new Promise(res => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.readAsDataURL(blob); }); }
     function splitBase64(str, n) { const len = Math.ceil(str.length / n); const arr = []; for (let i = 0; i < n; i++) arr.push(str.slice(i * len, (i + 1) * len)); return arr; }
 
-    /* Printing */
     printBtn.addEventListener('click', () => {
       const text = hiddenInput.value.trim();
       const existingCards = document.querySelectorAll('.card');
@@ -872,44 +863,58 @@
       });
     }
 
-    /* Fixed Card Download */
+    /* FIXED: Card Download - Handle both normal and expanded states */
     function downloadCard(el) {
+      console.log('Download started, expanded:', el.classList.contains('expanded'));
+
+      // Clone the card
       const clone = el.cloneNode(true);
 
+      // Remove buttons
       const del = clone.querySelector('.delete-btn');
       if (del) del.remove();
       const save = clone.querySelector('.save-btn');
       if (save) save.remove();
 
-      const wrapper = document.createElement('div');
-      wrapper.style.position = 'fixed';
-      wrapper.style.top = '0';
-      wrapper.style.left = '0';
-      wrapper.style.width = 'auto';
-      wrapper.style.height = 'auto';
-      wrapper.style.zIndex = '999999';
-      wrapper.style.background = 'white';
-      wrapper.style.padding = '50px';
+      // CRITICAL: Remove expanded class to get normal size
+      clone.classList.remove('expanded');
 
-      clone.style.position = 'static';
-      clone.style.transform = 'none';
-      clone.style.left = 'auto';
-      clone.style.top = 'auto';
-      clone.style.margin = '0';
+      // Create wrapper for rendering
+      const wrapper = document.createElement('div');
+      wrapper.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 999999;
+    background: white;
+    padding: 50px;
+  `;
+
+      // Reset all card styles to ensure proper rendering
+      clone.style.cssText = `
+    position: static !important;
+    transform: none !important;
+    left: auto !important;
+    top: auto !important;
+    margin: 0 !important;
+    width: 320px;
+    height: 410px;
+  `;
 
       wrapper.appendChild(clone);
       document.body.appendChild(wrapper);
 
+      // Wait for rendering and fonts to load
       setTimeout(() => {
-        html2canvas(wrapper, {
+        html2canvas(clone, {
           backgroundColor: '#ffffff',
           scale: 2,
-          logging: true,
+          logging: false,
           useCORS: true,
-          allowTaint: true,
-          width: wrapper.offsetWidth,
-          height: wrapper.offsetHeight
+          allowTaint: true
         }).then(canvas => {
+          console.log('Canvas created:', canvas.width, 'x', canvas.height);
+
           const now = new Date();
           const ts = now.getFullYear() +
             (now.getMonth() + 1).toString().padStart(2, '0') +
@@ -928,10 +933,9 @@
           alert('下載失敗: ' + err.message);
           if (document.body.contains(wrapper)) document.body.removeChild(wrapper);
         });
-      }, 100);
+      }, 200);
     }
 
-    /* API Integration */
     async function saveCard(meta) {
       try {
         await fetch(API_URL, {
