@@ -8,7 +8,7 @@ const DEFAULT_IMAGE_MAX_KB = 100;
 // Use window.ENV or fallback to defaults
 const MAX_CARDS = (window.ENV && window.ENV.MAX_CARDS) ? parseInt(window.ENV.MAX_CARDS) : DEFAULT_MAX_CARDS;
 const TARGET_IMAGE_MAX_BYTES = ((window.ENV && window.ENV.MAX_IMAGE_SIZE_KB) ? parseInt(window.ENV.MAX_IMAGE_SIZE_KB) : DEFAULT_IMAGE_MAX_KB) * 1024;
-const API_URL = 'http://localhost:3000/api/cards';
+const API_URL = '/api/cards';
 
 // DOM Elements
 const typedText = document.getElementById('typed-text');
