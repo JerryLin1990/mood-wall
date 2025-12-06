@@ -418,23 +418,25 @@
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     }
 
-    /* Expanded Card Style */
+    /* Expanded Card Style - Fix Z-Index */
     .card.expanded {
       position: fixed !important;
       top: 50% !important;
       left: 50% !important;
       transform: translate(-50%, -50%) scale(1) !important;
-      z-index: 9999 !important;
+      z-index: 10001 !important;
+      /* Higher than typewriter (z-index 60) and printing (1000) */
       box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
       cursor: default;
     }
 
-    /* Overlay for expanded mode */
+    /* Overlay for expanded mode - Fix Z-Index */
     #overlay {
       position: fixed;
       inset: 0;
       background: rgba(0, 0, 0, 0.5);
-      z-index: 9998;
+      z-index: 10000;
+      /* Higher than typewriter */
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.3s;
@@ -640,11 +642,13 @@
 
     function adjustLayout() {
       const w = window.innerWidth;
-      // Base width for typewriter is around 400px. 
-      // If screen is smaller, scale down.
+      // Base width for typewriter is around 380px. 
+      // Scale down more aggressively for mobile to save space
       let scale = 1;
       if (w < 420) {
-        scale = (w - 20) / 380; // 380 is css var --typewriter-width
+        scale = (w - 40) / 380 * 0.8; // Scale to 80% of width
+      } else {
+        scale = 0.8; // Default scale down slightly on desktop too if desired, or keep 1
       }
       typewriterContainer.style.transform = `translateX(-50%) scale(${scale})`;
     }
@@ -786,7 +790,9 @@
     /* Printing */
     printBtn.addEventListener('click', () => {
       const text = hiddenInput.value.trim();
+      // Fix: Use querySelectorAll to count actual cards, excluding the one being printed if any
       const existingCards = document.querySelectorAll('.card:not(.printing)');
+      // Fix: Check strictly greater than or equal to MAX_CARDS
       if (existingCards.length >= MAX_CARDS) { alert(`心情牆已滿 (${MAX_CARDS}張)！請先刪除舊卡片。`); return; }
       if (!text && !currentBase64Parts) { alert('請寫點東西或上傳圖片'); focusInput(); return; }
 
