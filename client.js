@@ -291,7 +291,7 @@ printBtn.addEventListener('click', () => {
         cardEl.classList.remove('printing');
         cardEl.style.left = tx + 'px';
         cardEl.style.top = ty + 'px';
-        cardEl.style.transform = `rotate(${rot}deg)`;
+        cardEl.style.transform = `scale(0.25) rotate(${rot}deg)`;
         setupCardInteraction(cardEl, cardId, tx, ty, rot);
         saveCard(cardEl, text, currentBase64Parts, tx, ty, rot);
         currentBase64Parts = null;
@@ -364,7 +364,7 @@ function renderCard(data) {
 
     cardEl.style.left = data.x + 'px';
     cardEl.style.top = data.y + 'px';
-    cardEl.style.transform = `rotate(${data.r}deg)`;
+    cardEl.style.transform = `scale(0.25) rotate(${data.r}deg)`;
 
     cardsLayer.appendChild(cardEl);
     setupCardInteraction(cardEl, data.id, data.x, data.y, data.r);
@@ -450,11 +450,26 @@ function setupCardInteraction(cardEl, id, initialX, initialY, initialR) {
         e.stopPropagation();
         // Use html2canvas
         try {
-            const canvas = await html2canvas(cardEl, { scale: 2, backgroundColor: null });
-            const link = document.createElement('a');
-            link.download = `card-${id}.png`;
-            link.href = canvas.toDataURL();
-            link.click();
+            // Temporarily reset transform and hide buttons
+            const originalTransform = cardEl.style.transform;
+            const btns = cardEl.querySelectorAll('.delete-btn, .save-btn');
+            btns.forEach(b => b.style.display = 'none');
+
+            cardEl.style.transition = 'none';
+            cardEl.style.transform = 'scale(1) rotate(0deg)';
+
+            try {
+                const canvas = await html2canvas(cardEl, { scale: 2, backgroundColor: null });
+                const link = document.createElement('a');
+                link.download = `card-${id}.png`;
+                link.href = canvas.toDataURL();
+                link.click();
+            } finally {
+                // Restore state
+                btns.forEach(b => b.style.display = '');
+                cardEl.style.transform = originalTransform;
+                cardEl.style.transition = 'transform 0.1s';
+            }
         } catch (err) {
             console.error(err);
             alert('下載失敗');
