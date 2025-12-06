@@ -39,7 +39,7 @@
       background-size: 60px 60px, 60px 60px, cover;
       padding: 20px;
       overflow: auto;
-      z-index: 1;
+      /* z-index: 1;  <-- Removed to fix stacking context issue */
     }
 
     /* 卡片層 */
@@ -350,74 +350,6 @@
       line-height: 1;
     }
 
-    /* Styles */
-    .card.polaroid {
-      border-radius: 2px;
-    }
-
-    .card.postcard {
-      padding: 0;
-      border: 6px solid #fff;
-      border-radius: 0;
-    }
-
-    .card.postcard .photo {
-      height: 100%;
-      position: absolute;
-      inset: 0;
-      z-index: 0;
-      border: none;
-      filter: brightness(0.9);
-    }
-
-    .card.postcard .text {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: rgba(255, 255, 255, 0.9);
-      height: auto;
-      min-height: 90px;
-      padding: 12px;
-      z-index: 2;
-      font-family: sans-serif;
-    }
-
-    .card.postcard .mood-badge {
-      bottom: 95px;
-      right: 10px;
-      z-index: 3;
-    }
-
-    .card.minimal {
-      padding: 40px 20px;
-      background: #fff;
-      border: 1px solid #eaeaea;
-    }
-
-    .card.minimal .photo {
-      height: 160px;
-      width: 160px;
-      border-radius: 50%;
-      margin-bottom: 20px;
-      border: none;
-    }
-
-    .card.minimal .text {
-      text-align: center;
-      font-family: "Helvetica", sans-serif;
-      color: #555;
-      font-style: italic;
-    }
-
-    .card.sticker {
-      background: white;
-      padding: 10px;
-      border: 5px solid white;
-      border-radius: 18px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    }
-
     /* Expanded Card Style - Fix Z-Index */
     .card.expanded {
       position: fixed !important;
@@ -644,11 +576,12 @@
       const w = window.innerWidth;
       // Base width for typewriter is around 380px. 
       // Scale down more aggressively for mobile to save space
-      let scale = 1;
+      // User requested ~40% smaller than previous.
+      // Previous Desktop: 0.8 -> New: 0.5
+      // Previous Mobile: (w-20)/380 -> New: (w-20)/380 * 0.6
+      let scale = 0.5;
       if (w < 420) {
-        scale = (w - 40) / 380 * 0.8; // Scale to 80% of width
-      } else {
-        scale = 0.8; // Default scale down slightly on desktop too if desired, or keep 1
+        scale = ((w - 20) / 380) * 0.6;
       }
       typewriterContainer.style.transform = `translateX(-50%) scale(${scale})`;
     }
@@ -790,9 +723,8 @@
     /* Printing */
     printBtn.addEventListener('click', () => {
       const text = hiddenInput.value.trim();
-      // Fix: Use querySelectorAll to count actual cards, excluding the one being printed if any
-      const existingCards = document.querySelectorAll('.card:not(.printing)');
-      // Fix: Check strictly greater than or equal to MAX_CARDS
+      // Fix: Count ALL cards to strictly enforce limit
+      const existingCards = document.querySelectorAll('.card');
       if (existingCards.length >= MAX_CARDS) { alert(`心情牆已滿 (${MAX_CARDS}張)！請先刪除舊卡片。`); return; }
       if (!text && !currentBase64Parts) { alert('請寫點東西或上傳圖片'); focusInput(); return; }
 
@@ -925,7 +857,9 @@
           el.className = `card ${d.style || 'polaroid'}`;
           el.dataset.cardId = d.id;
           el.style.left = d.x + 'px'; el.style.top = d.y + 'px';
-          el.style.transform = `rotate(${d.r}deg) scale(0.3)`; // Default small scale
+          // Fix: Ensure r has a value and force scale(0.3)
+          const r = d.r || 0;
+          el.style.transform = `rotate(${r}deg) scale(0.3)`;
 
           let imgHtml = '';
           if (d.parts && d.header) { imgHtml = `<img src="${d.header}${d.parts.join('')}">`; }
