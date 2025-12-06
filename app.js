@@ -7,9 +7,24 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Env Vars for Limits
+const MAX_CARDS = process.env.MAX_CARDS ? parseInt(process.env.MAX_CARDS) : 7;
+// 100KB default if not set
+const MAX_IMAGE_SIZE_BYTES = (process.env.MAX_IMAGE_SIZE_KB ? parseInt(process.env.MAX_IMAGE_SIZE_KB) : 100) * 1024;
+
 // Root route - Place BEFORE static middleware to ensure it takes precedence
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'moodwall.html'));
+});
+
+// New Route: Serve Env Configuration to Frontend
+app.get('/env-config.js', (req, res) => {
+    const config = {
+        MAX_CARDS: MAX_CARDS,
+        MAX_IMAGE_SIZE_KB: process.env.MAX_IMAGE_SIZE_KB || 100 // Send raw KB value
+    };
+    res.set('Content-Type', 'application/javascript');
+    res.send(`window.ENV = ${JSON.stringify(config)};`);
 });
 
 // Middleware
@@ -31,6 +46,7 @@ const RANGE = `${SHEET_NAME}!A:L`; // A to L covers all columns
 
 // Auth Client
 const getAuthClient = () => {
+    if (!GOOGLE_SA_PRIVATE_KEY) return null; // Handle missing env safely
     return new google.auth.JWT(
         GOOGLE_SA_CLIENT_EMAIL,
         null,
@@ -39,10 +55,12 @@ const getAuthClient = () => {
     );
 };
 
-const sheets = google.sheets({ version: 'v4', auth: getAuthClient() });
+const authClient = getAuthClient();
+const sheets = authClient ? google.sheets({ version: 'v4', auth: authClient }) : null;
 
 // Helper: Get all rows
 async function getRows() {
+    if (!sheets) return [];
     const response = await sheets.spreadsheets.values.get({
         spreadsheetId: SHEET_ID,
         range: RANGE,
@@ -81,8 +99,27 @@ app.get('/api/cards', async (req, res) => {
 // POST /api/cards
 app.post('/api/cards', async (req, res) => {
     try {
+        // Backend Limit Check 1: Max Cards
+        const currentCards = await getRows();
+        if (currentCards.length >= MAX_CARDS) {
+            return res.status(400).json({ error: `Card limit reached (${MAX_CARDS})` });
+        }
+
         const card = req.body;
         const parts = card.parts || [];
+
+        // Backend Limit Check 2: Max Image Size (approximate)
+        // We only check if parts exist.
+        // Base64 size ~= size * 1.33. 
+        // We calculate total string length of parts.
+        const totalBase64Length = parts.join('').length;
+        // Estimated bytes = length * 0.75
+        const estimatedBytes = totalBase64Length * 0.75;
+
+        // Allow a small buffer (e.g., 10%) for variation or header overhead
+        if (estimatedBytes > MAX_IMAGE_SIZE_BYTES * 1.1) {
+            return res.status(400).json({ error: `Image too large. Max allowed is ${MAX_IMAGE_SIZE_BYTES / 1024}KB` });
+        }
 
         const row = [
             card.id,
@@ -208,4 +245,6 @@ async function getSheetId(sheetName) {
 
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`MAX_CARDS: ${MAX_CARDS}`);
+    console.log(`MAX_IMAGE_SIZE: ${MAX_IMAGE_SIZE_BYTES / 1024} KB`);
 });

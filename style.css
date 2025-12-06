@@ -1,0 +1,451 @@
+:root {
+  --typewriter-width: 380px;
+  --card-width: 320px;
+  --card-height: 410px;
+}
+
+* {
+  box-sizing: border-box
+}
+
+html,
+body {
+  height: 100%
+}
+
+body {
+  margin: 0;
+  font-family: "Noto Sans TC", "Roboto Mono", monospace, system-ui;
+  background: linear-gradient(180deg, #f7f7f7 0%, #efeae0 100%);
+  overflow: hidden;
+}
+
+#mood-wall {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(rgba(0, 0, 0, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.02) 1px, transparent 1px),
+    #e9ddc9;
+  background-size: 60px 60px, 60px 60px, cover;
+  padding: 20px;
+  overflow: auto;
+}
+
+.cards-layer {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  pointer-events: auto;
+}
+
+.typewriter-container {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 0;
+  width: var(--typewriter-width);
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+  transform-origin: bottom center;
+  transition: transform 0.2s;
+}
+
+.typewriter-body {
+  pointer-events: auto;
+  width: 100%;
+  background: #2c2c2c;
+  border-radius: 12px 12px 0 0;
+  box-shadow: 0 -4px 30px rgba(0, 0, 0, 0.5);
+  padding: 12px;
+  position: relative;
+  color: #eee;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.roller-area {
+  position: relative;
+  width: 100%;
+  height: 30px;
+  margin-bottom: -15px;
+  z-index: 5;
+}
+
+.carriage {
+  position: absolute;
+  top: 0;
+  left: 5%;
+  width: 90%;
+  height: 30px;
+  background: #444;
+  border-radius: 4px;
+  border: 1px solid #555;
+}
+
+.lever {
+  position: absolute;
+  top: -20px;
+  right: -10px;
+  width: 8px;
+  height: 50px;
+  background: #d9534f;
+  transform: rotate(15deg);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.lever:active {
+  transform: rotate(5deg) translateY(5px);
+}
+
+.paper {
+  position: relative;
+  width: 94%;
+  height: 110px;
+  background-color: #F9F7F3;
+  border: 1px solid #ddd;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 12px;
+  line-height: 1.5;
+  color: #222;
+  overflow-y: auto;
+  border-radius: 2px;
+  margin: 0 auto;
+  z-index: 4;
+  cursor: text;
+}
+
+.paper p {
+  white-space: pre-wrap;
+  margin: 0;
+  color: #2b2b2b;
+  font-size: 14px;
+  min-height: 20px;
+  font-weight: 500;
+}
+
+.paper-controls {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: flex;
+  gap: 4px;
+  z-index: 10;
+}
+
+.pctrl-btn {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid #ccc;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.controls-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #3a3a3a;
+  padding: 8px 10px;
+  border-radius: 8px;
+  margin-top: 5px;
+  z-index: 10;
+}
+
+.mood-group {
+  display: flex;
+  gap: 4px;
+}
+
+.mood-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #eee;
+  border: 1px solid #999;
+  cursor: pointer;
+  font-size: 16px;
+  transition: transform 0.1s;
+  color: #333;
+}
+
+.mood-btn:hover {
+  transform: scale(1.1);
+}
+
+.mood-btn.active {
+  background: #fffbe6;
+  border-color: #ffd700;
+  transform: translateY(-2px);
+  box-shadow: 0 0 8px #ffd700;
+}
+
+.print-btn {
+  background: #d9534f;
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 3px 0 #a94442;
+}
+
+.print-btn:active {
+  transform: translateY(3px);
+  box-shadow: none;
+}
+
+.style-select select {
+  background: #eee;
+  border: none;
+  padding: 6px;
+  border-radius: 4px;
+  font-size: 13px;
+  color: #333;
+  font-weight: bold;
+}
+
+.keyboard-base {
+  background: #4A4A4A;
+  padding: 10px 5px 15px;
+  border-radius: 6px;
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 4px;
+  width: 100%;
+  margin-top: 2px;
+}
+
+.key,
+.space-bar {
+  height: 32px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #333;
+  background: #EAE0D5;
+  box-shadow: 0 3px 0 #8d857c;
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.05s;
+}
+
+.key.pressed {
+  transform: translateY(3px);
+  box-shadow: 0 0 0;
+  background: #dacdc0;
+}
+
+.space-bar {
+  grid-column: span 6;
+  background: #c0c0c0;
+}
+
+.card {
+  width: var(--card-width);
+  height: var(--card-height);
+  background: #fff;
+  position: absolute;
+  user-select: none;
+  transition: transform 0.1s;
+  padding: 14px 14px 55px 14px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.card .photo {
+  width: 100%;
+  height: 260px;
+  background: #f0f0f0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #eee;
+}
+
+.card .photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+}
+
+.card .text {
+  width: 100%;
+  padding: 12px 4px 0;
+  font-size: 15px;
+  white-space: pre-wrap;
+  color: #333;
+  font-family: 'Courier New', Courier, monospace;
+  overflow: hidden;
+  flex: 1;
+}
+
+.card .mood-badge {
+  position: absolute;
+  bottom: 12px;
+  right: 15px;
+  font-size: 28px;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.1));
+}
+
+.card .delete-btn {
+  position: absolute;
+  top: -12px;
+  left: -12px;
+  background: #ff4444;
+  color: white;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-weight: bold;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  z-index: 100;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.card .save-btn {
+  position: absolute;
+  top: -12px;
+  right: -12px;
+  background: #4CAF50;
+  color: white;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-weight: bold;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  z-index: 100;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.card.expanded {
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) scale(1.5) !important;
+  z-index: 10001 !important;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
+  cursor: default;
+}
+
+#overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 10000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+
+#overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+@keyframes slow-print {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 100px) scale(0.9);
+    filter: blur(2px);
+  }
+
+  30% {
+    opacity: 1;
+    transform: translate(-50%, -150px) scale(0.95);
+    filter: blur(0);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -300px) rotate(-3deg) scale(1);
+  }
+}
+
+.card.printing {
+  position: fixed;
+  left: 50% !important;
+  bottom: 50px !important;
+  top: auto !important;
+  transform-origin: center bottom;
+  animation: slow-print 2.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+#hidden-input {
+  position: absolute;
+  opacity: 0;
+  top: 0;
+  left: 0;
+  height: 0;
+  width: 0;
+  border: none;
+  padding: 0;
+}
+
+@media (max-width: 768px) {
+  :root {
+    --typewriter-width: 100%;
+    --card-width: 260px;
+    --card-height: 340px;
+  }
+
+  .card.expanded {
+    transform: translate(-50%, -50%) scale(1.1) !important;
+  }
+
+  .keyboard-base .key {
+    height: 38px;
+    font-size: 11px;
+  }
+
+  .controls-row {
+    padding: 6px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .mood-btn {
+    width: 26px;
+    height: 26px;
+  }
+
+  .typewriter-container {
+    width: 100%;
+    padding: 0 10px;
+  }
+
+  .paper {
+    height: 90px;
+  }
+}
