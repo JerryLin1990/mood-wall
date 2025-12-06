@@ -5,6 +5,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>每日心情卡片牆 — 復古打字機（浮水印修復版）</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
     :root {
       --typewriter-width: 380px;
@@ -39,7 +40,6 @@
       background-size: 60px 60px, 60px 60px, cover;
       padding: 20px;
       overflow: auto;
-      /* z-index: 1;  <-- Removed to fix stacking context issue */
     }
 
     /* 卡片層 */
@@ -330,6 +330,7 @@
       filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.1));
     }
 
+    /* 按鈕樣式 */
     .card .delete-btn {
       position: absolute;
       top: -12px;
@@ -347,6 +348,26 @@
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
       z-index: 100;
       font-size: 18px;
+      line-height: 1;
+    }
+
+    .card .save-btn {
+      position: absolute;
+      top: -12px;
+      right: -12px;
+      background: #4CAF50;
+      color: white;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-weight: bold;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      z-index: 100;
+      font-size: 16px;
       line-height: 1;
     }
 
@@ -711,7 +732,14 @@
         const ctx = cvs.getContext('2d');
         ctx.drawImage(imgBitmap, 0, 0, w, h);
 
-        const ts = new Date().toISOString().slice(0, 16).replace('T', ' ');
+        // Fix: Use local time
+        const now = new Date();
+        const ts = now.getFullYear() + '-' +
+          (now.getMonth() + 1).toString().padStart(2, '0') + '-' +
+          now.getDate().toString().padStart(2, '0') + ' ' +
+          now.getHours().toString().padStart(2, '0') + ':' +
+          now.getMinutes().toString().padStart(2, '0');
+
         // 字體大小：至少20px，或根據寬度調整
         const fontSize = Math.max(20, Math.round(w * 0.035));
         ctx.font = `bold ${fontSize}px "Courier New", monospace`;
@@ -758,6 +786,7 @@
       const moodIcons = ['', '😫', '🙁', '😐', '🙂', '😄'];
       cardEl.innerHTML = `
         <div class="delete-btn" title="刪除">×</div>
+        <div class="save-btn" title="下載">⬇</div>
         <div class="photo">${imgHtml}</div>
         <div class="text">${text}</div>
         <div class="mood-badge">${moodIcons[currentMood] || ''}</div>
@@ -799,6 +828,14 @@
         }
       });
 
+      const save = el.querySelector('.save-btn');
+      if (save) {
+        save.addEventListener('click', (e) => {
+          e.stopPropagation();
+          downloadCard(el);
+        });
+      }
+
       // Double click to expand
       el.addEventListener('dblclick', (e) => {
         e.stopPropagation();
@@ -815,7 +852,7 @@
     function makeDraggable(el) {
       let isDown = false, offX, offY;
       el.addEventListener('mousedown', e => {
-        if (e.target.classList.contains('delete-btn')) return;
+        if (e.target.classList.contains('delete-btn') || e.target.classList.contains('save-btn')) return;
         // Fix: Prevent default drag behavior on images to avoid sticking
         if (e.target.tagName === 'IMG') e.preventDefault();
 
@@ -835,6 +872,40 @@
           el.style.transform = `rotate(${r}deg) scale(0.3)`;
           updateCardPos(el.dataset.cardId, el.style.left, el.style.top, r);
         }
+      });
+    }
+
+    function downloadCard(el) {
+      // Clone to avoid modifying the visible card
+      const clone = el.cloneNode(true);
+
+      // Remove buttons from clone
+      const del = clone.querySelector('.delete-btn');
+      if (del) del.remove();
+      const save = clone.querySelector('.save-btn');
+      if (save) save.remove();
+
+      // Reset transform to scale(1) and remove rotation for clean capture
+      clone.style.transform = 'scale(1)';
+      clone.style.position = 'fixed';
+      clone.style.top = '-9999px';
+      clone.style.left = '-9999px';
+      clone.style.zIndex = '99999';
+      document.body.appendChild(clone);
+
+      html2canvas(clone, {
+        backgroundColor: null, // Transparent background if card has transparency
+        scale: 2 // Higher quality
+      }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = 'mood-card.png';
+        link.href = canvas.toDataURL();
+        link.click();
+        document.body.removeChild(clone);
+      }).catch(err => {
+        console.error('Download failed', err);
+        alert('下載失敗');
+        document.body.removeChild(clone);
       });
     }
 
@@ -889,6 +960,7 @@
           const moodIcons = ['', '😫', '🙁', '😐', '🙂', '😄'];
           el.innerHTML = `
                 <div class="delete-btn">×</div>
+                <div class="save-btn" title="下載">⬇</div>
                 <div class="photo">${imgHtml}</div>
                 <div class="text">${d.text}</div>
                 <div class="mood-badge">${moodIcons[d.mood] || ''}</div>
