@@ -912,7 +912,7 @@
         photoDiv.style.cssText = `
       width: 100% !important;
       height: 260px !important;
-      background: #f0f0f0 !important;
+      background: #000 !important;
       overflow: hidden !important;
       display: flex !important;
       align-items: center !important;
@@ -923,10 +923,11 @@
         const img = photoDiv.querySelector('img');
         if (img) {
           img.style.cssText = `
-        width: 100% !important;
-        height: 100% !important;
-        object-fit: contain !important;
-        background: #000 !important;
+        max-width: 100% !important;
+        max-height: 100% !important;
+        width: auto !important;
+        height: auto !important;
+        display: block !important;
       `;
         }
       }
