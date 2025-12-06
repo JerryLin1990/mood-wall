@@ -452,31 +452,31 @@ function setupCardInteraction(cardEl, id, initialX, initialY, initialR) {
     // Download/Save Image
     cardEl.querySelector('.save-btn').addEventListener('click', async (e) => {
         e.stopPropagation();
-        // Use html2canvas
+        let clone;
         try {
-            // Temporarily reset transform and hide buttons
-            const originalTransform = cardEl.style.transform;
-            const btns = cardEl.querySelectorAll('.delete-btn, .save-btn');
-            btns.forEach(b => b.style.display = 'none');
 
-            cardEl.style.transition = 'none';
-            cardEl.style.transform = 'scale(1) rotate(0deg)';
+            document.body.appendChild(clone);
 
-            try {
-                const canvas = await html2canvas(cardEl, { scale: 2, backgroundColor: null });
-                const link = document.createElement('a');
-                link.download = `card-${id}.png`;
-                link.href = canvas.toDataURL();
-                link.click();
-            } finally {
-                // Restore state
-                btns.forEach(b => b.style.display = '');
-                cardEl.style.transform = originalTransform;
-                cardEl.style.transition = 'transform 0.1s';
-            }
+            // Wait a tick for DOM to update
+            await new Promise(resolve => setTimeout(resolve, 50));
+
+            const canvas = await html2canvas(clone, {
+                scale: 2,
+                backgroundColor: null,
+                useCORS: true
+            });
+
+            const link = document.createElement('a');
+            link.download = `card-${id}.png`;
+            link.href = canvas.toDataURL();
+            link.click();
         } catch (err) {
             console.error(err);
             alert('下載失敗');
+        } finally {
+            if (clone && document.body.contains(clone)) {
+                document.body.removeChild(clone);
+            }
         }
     });
 }
