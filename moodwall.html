@@ -648,19 +648,29 @@
       if (el) { el.classList.add('pressed'); setTimeout(() => el.classList.remove('pressed'), 100); }
     }
 
-    /* Input Sync with Limits */
+    /* Input Sync with Limits and IME Support */
+    let isComposing = false;
+    hiddenInput.addEventListener('compositionstart', () => isComposing = true);
+    hiddenInput.addEventListener('compositionend', () => {
+      isComposing = false;
+      hiddenInput.dispatchEvent(new Event('input'));
+    });
+
     hiddenInput.addEventListener('input', () => {
+      if (isComposing) {
+        typedText.textContent = hiddenInput.value;
+        return;
+      }
+
       let val = hiddenInput.value;
       const lines = val.split('\n');
       const MAX_LINES = 9;
-      const MAX_CHARS_PER_LINE = 14; // Approximate for typewriter width
+      const MAX_CHARS_PER_LINE = 14;
 
-      // Enforce line count
       if (lines.length > MAX_LINES) {
         val = lines.slice(0, MAX_LINES).join('\n');
       }
 
-      // Enforce line length (simple truncation)
       const truncatedLines = val.split('\n').map(line => {
         return line.length > MAX_CHARS_PER_LINE ? line.slice(0, MAX_CHARS_PER_LINE) : line;
       });
@@ -896,7 +906,7 @@
       container.style.top = '0';
       container.style.left = '0';
       container.style.zIndex = '-9999';
-      container.style.padding = '20px'; // Add padding for shadow
+      container.style.padding = '50px'; // Add padding for shadow
       container.style.background = 'transparent';
 
       // Reset card styles
@@ -909,7 +919,7 @@
       container.appendChild(clone);
       document.body.appendChild(container);
 
-      html2canvas(clone, {
+      html2canvas(container, { // Capture the container instead of just clone
         backgroundColor: null,
         scale: 3,
         logging: false,
