@@ -653,7 +653,9 @@
     hiddenInput.addEventListener('compositionstart', () => isComposing = true);
     hiddenInput.addEventListener('compositionend', () => {
       isComposing = false;
-      hiddenInput.dispatchEvent(new Event('input'));
+      // Do NOT dispatch input event manually here to avoid double-fire issues
+      // Just run the update logic directly
+      updateInputDisplay();
     });
 
     hiddenInput.addEventListener('input', () => {
@@ -661,7 +663,10 @@
         typedText.textContent = hiddenInput.value;
         return;
       }
+      updateInputDisplay();
+    });
 
+    function updateInputDisplay() {
       let val = hiddenInput.value;
       const lines = val.split('\n');
       const MAX_LINES = 9;
@@ -676,6 +681,7 @@
       });
       val = truncatedLines.join('\n');
 
+      // Only update value if it actually changed to avoid resetting cursor/IME state
       if (hiddenInput.value !== val) {
         hiddenInput.value = val;
       }
@@ -683,7 +689,7 @@
       typedText.textContent = val;
       if (!val) typedText.innerHTML = '<span style="color:#999">點此輸入心情...</span>';
       else typedText.style.color = '#2b2b2b';
-    });
+    }
 
     /* Mood & Style */
     moodButtons.forEach(btn => {
@@ -905,7 +911,7 @@
       container.style.position = 'fixed';
       container.style.top = '0';
       container.style.left = '0';
-      container.style.zIndex = '-9999';
+      container.style.zIndex = '99999'; // High z-index to be visible
       container.style.padding = '50px'; // Add padding for shadow
       container.style.background = 'transparent';
 
