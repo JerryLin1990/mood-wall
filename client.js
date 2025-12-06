@@ -362,12 +362,14 @@ function renderCard(data) {
     <div class="mood-badge">${window.MOOD_EMOJIS[data.mood] || ''}</div>
   `;
 
+    const safeR = (data.r === undefined || data.r === null || data.r === '') ? (Math.random() * 10 - 5) : data.r;
+
     cardEl.style.left = data.x + 'px';
     cardEl.style.top = data.y + 'px';
-    cardEl.style.transform = `scale(0.25) rotate(${data.r}deg)`;
+    cardEl.style.transform = `scale(0.25) rotate(${safeR}deg)`;
 
     cardsLayer.appendChild(cardEl);
-    setupCardInteraction(cardEl, data.id, data.x, data.y, data.r);
+    setupCardInteraction(cardEl, data.id, data.x, data.y, safeR);
 }
 
 function setupCardInteraction(cardEl, id, initialX, initialY, initialR) {
