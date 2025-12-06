@@ -2,19 +2,20 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const { google } = require('googleapis');
+const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Root route - Place BEFORE static middleware to ensure it takes precedence
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'moodwall.html'));
+});
 
 // Middleware
 app.use(cors());
 app.use(express.json({ limit: '50mb' })); // Increase limit for images
 app.use(express.static('.')); // Serve static files
-
-// Root route
-app.get('/', (req, res) => {
-    res.sendFile(__dirname + '/moodwall.html');
-});
 
 // Google Sheets Config
 const SHEET_ID = process.env.GOOGLE_SHEET_ID;
