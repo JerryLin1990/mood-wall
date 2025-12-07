@@ -177,7 +177,7 @@ app.post('/api/cards', async (req, res) => {
 
         await sheets.spreadsheets.values.append({
             spreadsheetId: SHEET_ID,
-            range: `${title}!A:K`,
+            range: `${title}!A:L`,
             valueInputOption: 'USER_ENTERED',
             resource: { values: [row] },
         });
@@ -209,7 +209,7 @@ app.patch('/api/cards/:id', async (req, res) => {
 
         await sheets.spreadsheets.values.update({
             spreadsheetId: SHEET_ID,
-            range: `${title}!A${sheetRow}:K${sheetRow}`,
+            range: `${title}!A${sheetRow}:L${sheetRow}`,
             valueInputOption: 'USER_ENTERED',
             resource: { values: [updatedRow] },
         });
@@ -254,6 +254,6 @@ app.delete('/api/cards/:id', async (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+    console.log(`Server running on http://localhost:${PORT}`);
     if (sheets) console.log('Connected to Google Sheets');
 });
