@@ -81,7 +81,8 @@ function rowToCard(row) {
         parts: [row[5], row[6], row[7]].filter(p => p && p.length > 0),
         x: parseFloat(row[8]) || 0,
         y: parseFloat(row[9]) || 0,
-        r: parseFloat(row[10]) || 0
+        r: parseFloat(row[10]) || 0,
+        createdAt: row[11] || null
     };
 }
 
@@ -98,7 +99,8 @@ function cardToRow(card) {
         p[2] || '',
         card.x,
         card.y,
-        card.r
+        card.r,
+        card.createdAt || ''
     ];
 }
 
@@ -108,7 +110,7 @@ async function getSheetData() {
         const { title } = await getSheetInfo();
         const response = await sheets.spreadsheets.values.get({
             spreadsheetId: SHEET_ID,
-            range: `${title}!A:K`, // Dynamic range
+            range: `${title}!A:L`, // Dynamic range
         });
         return response.data.values || [];
     } catch (err) {

@@ -191,9 +191,13 @@ fileInput.addEventListener('change', async (e) => {
 async function processImageFileSpecV2(file, targetMaxBytes) {
     const img = await createImageBitmap(file);
     const MAX_DIM = 1200;
+    const MIN_DIM = 600;
     let w = img.width, h = img.height;
     if (Math.max(w, h) > MAX_DIM) {
         const ratio = MAX_DIM / Math.max(w, h);
+        w = Math.round(w * ratio); h = Math.round(h * ratio);
+    } else if (Math.max(w, h) < MIN_DIM) {
+        const ratio = MIN_DIM / Math.max(w, h);
         w = Math.round(w * ratio); h = Math.round(h * ratio);
     }
     let quality = 0.9;
@@ -279,6 +283,7 @@ printBtn.addEventListener('click', () => {
     <div class="photo">${imgHtml}</div>
     <div class="text">${text}</div>
     <div class="mood-badge">${window.MOOD_EMOJIS[currentMood] || ''}</div>
+    <div class="date-badge">${new Date().toLocaleString('zh-TW', { hour12: false, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</div>
   `;
 
     const tx = Math.random() * (window.innerWidth - 340) + 20;
@@ -313,7 +318,8 @@ async function saveCard(cardEl, text, parts, x, y, r) {
         parts: parts ? parts.parts : [],
         x: Math.round(x),
         y: Math.round(y),
-        r: Math.round(r)
+        r: Math.round(r),
+        createdAt: new Date().toISOString()
     };
 
     try {
@@ -360,6 +366,7 @@ function renderCard(data) {
     <div class="photo">${imgHtml}</div>
     <div class="text">${data.text}</div>
     <div class="mood-badge">${window.MOOD_EMOJIS[data.mood] || ''}</div>
+    <div class="date-badge">${data.createdAt ? new Date(data.createdAt).toLocaleString('zh-TW', { hour12: false, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : ''}</div>
   `;
 
     const safeR = (data.r === undefined || data.r === null || data.r === '') ? (Math.random() * 10 - 5) : data.r;
