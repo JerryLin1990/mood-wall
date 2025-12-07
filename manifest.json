@@ -1,0 +1,20 @@
+{
+    "name": "每日心情卡片牆",
+    "short_name": "MoodWall",
+    "start_url": "./moodwall.html",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#ffffff",
+    "icons": [
+        {
+            "src": "./img/moodwall.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "./img/moodwall.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}
