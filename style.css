@@ -462,4 +462,25 @@ body {
   .paper {
     height: 90px;
   }
+}.cursor {
+    display: inline-block;
+    width: 1px;
+    height: 1.2em;
+    background-color: #333;
+    animation: blink 1s step-end infinite;
+    vertical-align: text-bottom;
+    margin-left: -1px;
+    /* Overlap slightly to look like insertion point */
+}
+
+@keyframes blink {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0;
+    }
 }

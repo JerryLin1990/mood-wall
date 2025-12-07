@@ -60,46 +60,61 @@ overlay.addEventListener('click', () => {
     overlay.classList.remove('active');
 });
 
-// Virtual Keyboard Click Handler
-// Virtual Keyboard Click Handler
-document.querySelector('.keyboard-base').addEventListener('click', (e) => {
-    e.preventDefault(); // Prevent focus loss
-    focusInput();
+// Virtual Keyboard Interaction Handler
+const handleVirtualKey = (e) => {
+    // Prevent default to keep focus on input (CRITICAL for cursor position accuracy)
+    if (e.cancelable) e.preventDefault();
+
     const keyEl = e.target.closest('.key, .space-bar');
-    if (keyEl) {
-        const key = keyEl.dataset.key;
-        visualKeyPress(key);
+    if (!keyEl) return;
 
-        const start = hiddenInput.selectionStart;
-        const end = hiddenInput.selectionEnd;
-        const val = hiddenInput.value;
+    // Ensure input is focused
+    hiddenInput.focus();
 
-        if (key === 'Backspace') {
-            if (start !== end) {
-                // Delete selection
-                hiddenInput.value = val.slice(0, start) + val.slice(end);
-                hiddenInput.setSelectionRange(start, start);
-            } else if (start > 0) {
-                // Delete character before cursor (handle surrogate pairs)
-                let deleteCount = 1;
-                if (start >= 2) {
-                    const low = val.charCodeAt(start - 1);
-                    const high = val.charCodeAt(start - 2);
-                    if (low >= 0xDC00 && low <= 0xDFFF && high >= 0xD800 && high <= 0xDBFF) {
-                        deleteCount = 2;
-                    }
+    const key = keyEl.dataset.key;
+    visualKeyPress(key);
+
+    const start = hiddenInput.selectionStart;
+    const end = hiddenInput.selectionEnd;
+    const val = hiddenInput.value;
+
+    if (key === 'Backspace') {
+        if (start !== end) {
+            // Delete selection
+            const newVal = val.slice(0, start) + val.slice(end);
+            hiddenInput.value = newVal;
+            hiddenInput.setSelectionRange(start, start);
+        } else if (start > 0) {
+            // Delete character before cursor (handle surrogate pairs)
+            let deleteCount = 1;
+            if (start >= 2) {
+                const low = val.charCodeAt(start - 1);
+                const high = val.charCodeAt(start - 2);
+                // Check for Surrogate Pair (High: D800-DBFF, Low: DC00-DFFF)
+                if (low >= 0xDC00 && low <= 0xDFFF && high >= 0xD800 && high <= 0xDBFF) {
+                    deleteCount = 2;
                 }
-                hiddenInput.value = val.slice(0, start - deleteCount) + val.slice(start);
-                hiddenInput.setSelectionRange(start - deleteCount, start - deleteCount);
             }
+            const newVal = val.slice(0, start - deleteCount) + val.slice(start);
+            hiddenInput.value = newVal;
+            hiddenInput.setSelectionRange(start - deleteCount, start - deleteCount);
         }
-        else if (key === 'Enter') insertChar('\n');
-        else if (key === 'Space') insertChar(' ');
-        else if (key.length === 1) insertChar(key);
-
-        hiddenInput.dispatchEvent(new Event('input'));
+    } else if (key === 'Enter') {
+        insertChar('\n');
+    } else if (key === 'Space' || key === ' ') {
+        insertChar(' ');
+    } else if (key.length === 1) {
+        insertChar(key);
     }
-});
+
+    hiddenInput.dispatchEvent(new Event('input', { bubbles: true }));
+};
+
+const kbBase = document.querySelector('.keyboard-base');
+// Remove old listeners if any to avoid duplicates (though simple assignment implies fresh in this context if reloaded, but good practice)
+kbBase.removeEventListener('click', typeof handleVirtualKey !== 'undefined' ? handleVirtualKey : null);
+kbBase.addEventListener('mousedown', handleVirtualKey);
+kbBase.addEventListener('touchstart', handleVirtualKey, { passive: false });
 
 function insertChar(char) {
     const start = hiddenInput.selectionStart;
@@ -170,6 +185,9 @@ hiddenInput.addEventListener('input', (e) => {
 /**
  * Applies limits to the input text (max lines, max chars per line)
  */
+/**
+ * Applies limits to the input text (max lines, max chars per line) and renders with cursor
+ */
 function applyInputLimits() {
     let val = hiddenInput.value;
     const lines = val.split('\n');
@@ -188,13 +206,35 @@ function applyInputLimits() {
     if (hiddenInput.value !== val) {
         const cursorPos = hiddenInput.selectionStart;
         hiddenInput.value = val;
+        // Restore cursor position if it was truncated, otherwise keep it
         hiddenInput.setSelectionRange(Math.min(cursorPos, val.length), Math.min(cursorPos, val.length));
     }
 
-    typedText.textContent = val;
-    if (!val) typedText.innerHTML = '<span style="color:#999">點此輸入心情...</span>';
-    else typedText.style.color = '#2b2b2b';
+    renderTypedText(val);
 }
+
+function renderTypedText(text) {
+    const cursorPos = hiddenInput.selectionStart;
+    const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+
+    if (!text) {
+        typedText.innerHTML = '<span class="cursor"></span><span style="color:#999">點此輸入心情...</span>';
+        return;
+    }
+
+    const before = text.slice(0, cursorPos);
+    const after = text.slice(cursorPos);
+
+    typedText.innerHTML = esc(before) + '<span class="cursor"></span>' + esc(after);
+    typedText.style.color = '#2b2b2b';
+}
+
+// Update cursor position on movement
+document.addEventListener('selectionchange', () => {
+    if (document.activeElement === hiddenInput) {
+        applyInputLimits(); // Or just renderTypedText(hiddenInput.value) but applyInputLimits is safe
+    }
+});
 
 // Mood Selection
 moodButtons.forEach(btn => {
