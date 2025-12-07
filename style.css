@@ -418,13 +418,39 @@ body {
 
 #hidden-input {
   position: absolute;
-  opacity: 0;
   top: 0;
   left: 0;
-  height: 0;
-  width: 0;
+  width: 100%;
+  height: 100%;
   border: none;
-  padding: 0;
+  padding: 12px;
+  margin: 0;
+  background: transparent;
+  color: transparent;
+  caret-color: #333;
+  /* Show blinking cursor */
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.5;
+  resize: none;
+  outline: none;
+  z-index: 5;
+  /* Text is invisible but input is interactive */
+}
+
+/* Hide the custom cursor on desktop since we use our own rendering,
+   but on mobile we rely on native cursor */
+@media (min-width: 769px) {
+  #hidden-input {
+    caret-color: transparent;
+  }
+}
+
+#typed-text {
+  position: relative;
+  z-index: 1;
+  pointer-events: none;
+  /* Let clicks pass through to textarea */
 }
 
 @media (max-width: 768px) {
@@ -462,25 +488,27 @@ body {
   .paper {
     height: 90px;
   }
-}.cursor {
-    display: inline-block;
-    width: 1px;
-    height: 1.2em;
-    background-color: #333;
-    animation: blink 1s step-end infinite;
-    vertical-align: text-bottom;
-    margin-left: -1px;
-    /* Overlap slightly to look like insertion point */
+}
+
+.cursor {
+  display: inline-block;
+  width: 1px;
+  height: 1.2em;
+  background-color: #333;
+  animation: blink 1s step-end infinite;
+  vertical-align: text-bottom;
+  margin-left: -1px;
+  /* Overlap slightly to look like insertion point */
 }
 
 @keyframes blink {
 
-    0%,
-    100% {
-        opacity: 1;
-    }
+  0%,
+  100% {
+    opacity: 1;
+  }
 
-    50% {
-        opacity: 0;
-    }
+  50% {
+    opacity: 0;
+  }
 }
