@@ -110,6 +110,12 @@ const handleVirtualKey = (e) => {
     hiddenInput.dispatchEvent(new Event('input', { bubbles: true }));
 };
 
+// Close expanded card on overlay click
+overlay.addEventListener('click', () => {
+    document.querySelectorAll('.card.expanded').forEach(c => c.classList.remove('expanded'));
+    overlay.classList.remove('active');
+});
+
 const kbBase = document.querySelector('.keyboard-base');
 // Remove old listeners if any to avoid duplicates (though simple assignment implies fresh in this context if reloaded, but good practice)
 kbBase.removeEventListener('click', typeof handleVirtualKey !== 'undefined' ? handleVirtualKey : null);

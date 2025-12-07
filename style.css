@@ -48,8 +48,6 @@ body {
   height: 100%;
   pointer-events: none;
   /* Let clicks pass through empty areas to typewriter */
-  z-index: 70;
-  /* Ensure cards are above typewriter (z-index 60) */
 }
 
 .typewriter-container {
@@ -277,6 +275,8 @@ body {
   user-select: none;
   pointer-events: auto;
   /* Re-enable interaction for cards */
+  z-index: 70;
+  /* Base z-index to sit above typewriter (60) */
   /* CHANGE: Set transform-origin to top left so (left, top) matches visual top-left */
   transform-origin: top left;
   transition: transform 0.1s;
@@ -379,17 +379,19 @@ body {
 }
 
 .card.expanded {
-  position: fixed !important;
+  position: absolute !important;
   top: 50% !important;
   left: 50% !important;
-  transform: translate(-50%, -50%) scale(1.5) !important;
+  transform: translate(-50%, -50%) scale(1.15) !important;
+  /* Reset origin to center for proper centering */
+  transform-origin: center center !important;
   z-index: 10001 !important;
   box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
   cursor: default;
 }
 
 #overlay {
-  position: fixed;
+  position: absolute;
   inset: 0;
   background: rgba(0, 0, 0, 0.5);
   z-index: 10000;
@@ -401,6 +403,7 @@ body {
 #overlay.active {
   opacity: 1;
   pointer-events: auto;
+  /* Enable clicks when active */
 }
 
 @keyframes slow-print {
