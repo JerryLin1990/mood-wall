@@ -19,7 +19,7 @@ const btnUpload = document.getElementById('btn-upload');
 const printBtn = document.getElementById('print-btn');
 const cardsLayer = document.getElementById('cards-layer');
 const moodButtons = document.querySelectorAll('.mood-btn');
-const styleSelect = document.getElementById('card-style');
+
 const overlay = document.getElementById('overlay');
 const typewriterContainer = document.querySelector('.typewriter-container');
 
@@ -265,8 +265,8 @@ moodButtons.forEach(btn => {
     });
 });
 
-// Style Selection
-styleSelect.addEventListener('change', (e) => currentStyle = e.target.value);
+
+
 
 // File Upload
 btnUpload.addEventListener('click', (e) => { e.stopPropagation(); fileInput.click(); });

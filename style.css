@@ -218,15 +218,7 @@ body {
   box-shadow: none;
 }
 
-.style-select select {
-  background: #eee;
-  border: none;
-  padding: 6px;
-  border-radius: 4px;
-  font-size: 13px;
-  color: #333;
-  font-weight: bold;
-}
+
 
 .keyboard-base {
   background: #4A4A4A;
