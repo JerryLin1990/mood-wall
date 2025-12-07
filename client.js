@@ -61,19 +61,65 @@ overlay.addEventListener('click', () => {
 });
 
 // Virtual Keyboard Click Handler
+// Virtual Keyboard Click Handler
 document.querySelector('.keyboard-base').addEventListener('click', (e) => {
+    e.preventDefault(); // Prevent focus loss
     focusInput();
     const keyEl = e.target.closest('.key, .space-bar');
     if (keyEl) {
         const key = keyEl.dataset.key;
         visualKeyPress(key);
-        if (key === 'Backspace') hiddenInput.value = hiddenInput.value.slice(0, -1);
-        else if (key === 'Enter') hiddenInput.value += '\n';
-        else if (key === 'Space') hiddenInput.value += ' ';
-        else if (key.length === 1) hiddenInput.value += key;
+
+        const start = hiddenInput.selectionStart;
+        const end = hiddenInput.selectionEnd;
+        const val = hiddenInput.value;
+
+        if (key === 'Backspace') {
+            if (start !== end) {
+                // Delete selection
+                hiddenInput.value = val.slice(0, start) + val.slice(end);
+                hiddenInput.setSelectionRange(start, start);
+            } else if (start > 0) {
+                // Delete character before cursor (handle surrogate pairs)
+                let deleteCount = 1;
+                if (start >= 2) {
+                    const low = val.charCodeAt(start - 1);
+                    const high = val.charCodeAt(start - 2);
+                    if (low >= 0xDC00 && low <= 0xDFFF && high >= 0xD800 && high <= 0xDBFF) {
+                        deleteCount = 2;
+                    }
+                }
+                hiddenInput.value = val.slice(0, start - deleteCount) + val.slice(start);
+                hiddenInput.setSelectionRange(start - deleteCount, start - deleteCount);
+            }
+        }
+        else if (key === 'Enter') insertChar('\n');
+        else if (key === 'Space') insertChar(' ');
+        else if (key.length === 1) insertChar(key);
+
         hiddenInput.dispatchEvent(new Event('input'));
     }
 });
+
+function insertChar(char) {
+    const start = hiddenInput.selectionStart;
+    const end = hiddenInput.selectionEnd;
+    const val = hiddenInput.value;
+    hiddenInput.value = val.slice(0, start) + char + val.slice(end);
+    hiddenInput.setSelectionRange(start + char.length, start + char.length);
+}
+
+// Handle Mobile Keyboard covering UI
+if (window.visualViewport) {
+    const viewportHandler = () => {
+        const offset = window.innerHeight - window.visualViewport.height;
+        // Only adjust if keyboard is likely open (offset > 0)
+        // usage of 'bottom' style on fixed element
+        typewriterContainer.style.bottom = `${Math.max(0, offset)}px`;
+    };
+    window.visualViewport.addEventListener('resize', viewportHandler);
+    window.visualViewport.addEventListener('scroll', viewportHandler);
+}
 
 // Physical Keyboard Event Handler
 document.addEventListener('keydown', (e) => {
