@@ -23,7 +23,7 @@ let sheets;
 console.log('--- Google Sheets Config Check ---');
 console.log('SHEET_ID:', SHEET_ID ? 'Set' : 'MISSING');
 console.log('CLIENT_EMAIL:', GOOGLE_CLIENT_EMAIL ? 'Set' : 'MISSING');
-console.log('PRIVATE_KEY:', GOOGLE_PRIVATE_KEY ? 'Set (Length: ' + GOOGLE_PRIVATE_KEY.length + ')' : 'MISSING');
+console.log('PRIVATE_KEY:', GOOGLE_PRIVATE_KEY ? 'Set' : 'MISSING');
 
 if (SHEET_ID && GOOGLE_CLIENT_EMAIL && GOOGLE_PRIVATE_KEY) {
     try {
@@ -131,8 +131,7 @@ app.get('/env-config.js', (req, res) => {
     const config = {
         MAX_CARDS: MAX_CARDS,
         MAX_IMAGE_SIZE_KB: process.env.MAX_IMAGE_SIZE_KB || 100,
-        PORT: process.env.PORT,
-        WEB_PORT: process.env.WEB_PORT
+        // Removed internal port details for security
     };
     res.set('Content-Type', 'application/javascript');
     res.send(`window.ENV = ${JSON.stringify(config)};`);
@@ -144,12 +143,20 @@ app.use(express.json({ limit: '5mb' }));
 
 // Security
 app.use((req, res, next) => {
-    if (req.path.startsWith('/.') ||
-        req.path.includes('app.js') ||
-        req.path.includes('package.json') ||
-        req.path.includes('package-lock.json')) {
+    const forbiddenFiles = ['app.js', 'package.json', 'package-lock.json', '.env', '.gitignore', 'readme.md'];
+    const lowerPath = req.path.toLowerCase();
+    const fileName = path.basename(lowerPath);
+
+    // Block hidden files/directories (starting with dot)
+    if (lowerPath.includes('/.') || fileName.startsWith('.')) {
         return res.status(403).send('Forbidden');
     }
+
+    // Block sensitive files by name (exact match or case-insensitive)
+    if (forbiddenFiles.includes(fileName)) {
+        return res.status(403).send('Forbidden');
+    }
+
     next();
 });
 
@@ -173,6 +180,29 @@ app.post('/api/cards', async (req, res) => {
     try {
         const { title } = await getSheetInfo();
         const newCard = req.body;
+
+        // 1. Basic Content Validation
+        if (!newCard || typeof newCard !== 'object') {
+            return res.status(400).json({ error: 'Invalid data format' });
+        }
+        // Limit text length to prevent abuse
+        if (newCard.text && newCard.text.length > 500) {
+            return res.status(400).json({ error: 'Text too long' });
+        }
+        // Ensure x, y, r are numbers to prevent injection/formatting issues
+        newCard.x = Number(newCard.x) || 0;
+        newCard.y = Number(newCard.y) || 0;
+        newCard.r = Number(newCard.r) || 0;
+
+        // 2. Enforce Max Cards Limit
+        const allRows = await getSheetData();
+        // Count only valid card rows
+        const currentCardCount = allRows.map(rowToCard).filter(c => c !== null).length;
+
+        if (currentCardCount >= MAX_CARDS) {
+            return res.status(400).json({ error: `Card limit reached (${MAX_CARDS})` });
+        }
+
         const row = cardToRow(newCard);
 
         await sheets.spreadsheets.values.append({
