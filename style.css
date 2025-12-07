@@ -16,20 +16,30 @@ body {
 body {
   margin: 0;
   font-family: "Noto Sans TC", "Roboto Mono", monospace, system-ui;
-  background: linear-gradient(180deg, #f7f7f7 0%, #efeae0 100%);
+  background: #111;
+  /* Dark background for outer area */
   overflow: hidden;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  /* Center the wall */
 }
 
 #mood-wall {
-  position: absolute;
-  inset: 0;
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  /* Constrain width */
+  height: 100%;
   background:
     linear-gradient(rgba(0, 0, 0, 0.02) 1px, transparent 1px),
     linear-gradient(90deg, rgba(0, 0, 0, 0.02) 1px, transparent 1px),
     #e9ddc9;
   background-size: 60px 60px, 60px 60px, cover;
   padding: 20px;
-  overflow: auto;
+  overflow: hidden;
+  /* Hide scrollbars, let content layer handle it if needed */
+  box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
 }
 
 .cards-layer {
@@ -262,6 +272,8 @@ body {
   background: #fff;
   position: absolute;
   user-select: none;
+  /* CHANGE: Set transform-origin to top left so (left, top) matches visual top-left */
+  transform-origin: top left;
   transition: transform 0.1s;
   padding: 14px 14px 55px 14px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);

@@ -366,7 +366,10 @@ printBtn.addEventListener('click', () => {
     <div class="date-badge">${new Date().toLocaleString('zh-TW', { hour12: false, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</div>
   `;
 
-    const tx = Math.random() * (window.innerWidth - 340) + 20;
+    // Initial placement limits
+    // Simple random within container width (adjusted for card width)
+    const containerW = cardsLayer.clientWidth || window.innerWidth;
+    const tx = Math.random() * (containerW - 100) + 10;
     const ty = Math.random() * (window.innerHeight - 500) + 20;
     const rot = Math.random() * 10 - 5;
 
@@ -496,6 +499,31 @@ function setupCardInteraction(cardEl, id, initialX, initialY, initialR) {
         const dy = evt.clientY - startY;
         x = initialLeft + dx;
         y = initialTop + dy;
+
+        // Container-relative constraints
+        // Since #mood-wall has a fixed max-width and is position:relative, 
+        // 0 is the left edge of the wall.
+        const containerW = cardsLayer.clientWidth;
+
+        // Visual width = 320px * 0.25 = 80px
+        // With transform-origin: top left, 'left' corresponds to the visual left edge.
+        // So minX is simply 0 (or slight margin).
+        const minX = 0;
+
+        // maxX is container width minus the visual width of the card
+        const maxX = containerW - 80;
+
+        if (x < minX) x = minX;
+        if (x > maxX) x = maxX;
+
+        // Y-axis constraints (Visual height roughly 410 * 0.25 = 102.5px)
+        const containerH = cardsLayer.clientHeight;
+        const minY = 0;
+        const maxY = containerH - 110; // 110px safe margin
+
+        if (y < minY) y = minY;
+        if (y > maxY) y = maxY;
+
         cardEl.style.left = x + 'px';
         cardEl.style.top = y + 'px';
     }
