@@ -157,30 +157,42 @@ function visualKeyPress(keyStr) {
 
 /* IME Input Handling */
 let isComposing = false;
-let justFinishedComposition = false; // Cooldown flag to prevent selectionchange interference
+let justFinishedComposition = false;
+let compositionStartCursorPos = 0; // Track where composition started
 
-hiddenInput.addEventListener('compositionstart', () => {
+hiddenInput.addEventListener('compositionstart', (e) => {
     isComposing = true;
     justFinishedComposition = false;
+    // Save cursor position when composition starts
+    compositionStartCursorPos = hiddenInput.selectionStart;
 });
 
 hiddenInput.addEventListener('compositionend', (e) => {
     isComposing = false;
     justFinishedComposition = true;
 
-    // Clear the cooldown flag after a short delay
+    // Calculate the correct cursor position after composition
+    // The composed text was inserted at compositionStartCursorPos
+    const composedText = e.data || '';
+    const newCursorPos = compositionStartCursorPos + composedText.length;
+
+    // Explicitly set the cursor position
     setTimeout(() => {
+        hiddenInput.setSelectionRange(newCursorPos, newCursorPos);
+        applyInputLimits();
         justFinishedComposition = false;
-    }, 50);
+    }, 10);
 });
 
 hiddenInput.addEventListener('input', (e) => {
     if (isComposing) {
+        // During composition, just render current value - cursor rendering may be off but that's ok
         renderTypedText(hiddenInput.value);
-    } else {
-        // Use setTimeout to allow browser to settle cursor position after IME
+    } else if (!justFinishedComposition) {
+        // Normal input (not during/after composition)
         setTimeout(applyInputLimits, 0);
     }
+    // If justFinishedComposition is true, compositionend handler will handle the update
 });
 
 /**
