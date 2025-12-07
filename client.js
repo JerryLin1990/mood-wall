@@ -284,7 +284,7 @@ fileInput.addEventListener('change', async (e) => {
 });
 
 /**
- * Processes and compresses the image file
+ * Processes and compresses the image file (Removed watermark)
  * @param {File} file - The uploaded file
  * @param {number} targetMaxBytes - Target size in bytes
  */
@@ -301,10 +301,10 @@ async function processImageFileSpecV2(file, targetMaxBytes) {
         w = Math.round(w * ratio); h = Math.round(h * ratio);
     }
     let quality = 0.9;
-    let blob = await drawAndWatermark(img, w, h, quality);
+    let blob = await compressImage(img, w, h, quality);
     while (blob.size > targetMaxBytes && quality >= 0.5) {
         quality -= 0.1;
-        blob = await drawAndWatermark(img, w, h, quality);
+        blob = await compressImage(img, w, h, quality);
     }
     if (blob.size > targetMaxBytes) throw new Error('圖片過大無法壓縮');
     const dataUrl = await blobToDataURL(blob);
@@ -316,34 +316,14 @@ async function processImageFileSpecV2(file, targetMaxBytes) {
 }
 
 /**
- * Draws image to canvas and adds timestamp watermark
+ * Draws image to canvas without watermark
  */
-function drawAndWatermark(imgBitmap, w, h, q) {
+function compressImage(imgBitmap, w, h, q) {
     return new Promise(resolve => {
         const cvs = document.createElement('canvas');
         cvs.width = w; cvs.height = h;
         const ctx = cvs.getContext('2d');
         ctx.drawImage(imgBitmap, 0, 0, w, h);
-
-        const now = new Date();
-        const ts = now.getFullYear() + '-' +
-            (now.getMonth() + 1).toString().padStart(2, '0') + '-' +
-            now.getDate().toString().padStart(2, '0') + ' ' +
-            now.getHours().toString().padStart(2, '0') + ':' +
-            now.getMinutes().toString().padStart(2, '0');
-
-        const fontSize = Math.max(20, Math.round(w * 0.035));
-        ctx.font = `bold ${fontSize}px "Courier New", monospace`;
-        ctx.textAlign = 'right';
-        ctx.textBaseline = 'bottom';
-
-        ctx.strokeStyle = 'rgba(0,0,0,0.8)';
-        ctx.lineWidth = Math.max(3, fontSize * 0.2);
-        ctx.strokeText(ts, w - 20, h - 20);
-
-        ctx.fillStyle = '#ffffff';
-        ctx.fillText(ts, w - 20, h - 20);
-
         cvs.toBlob(b => resolve(b), 'image/jpeg', q);
     });
 }

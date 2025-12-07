@@ -464,6 +464,11 @@ body {
     transform: translate(-50%, -50%) scale(1.1) !important;
   }
 
+  .card .photo {
+    /* Reduce photo height on mobile to make room for text */
+    height: 190px;
+  }
+
   .keyboard-base .key {
     height: 38px;
     font-size: 11px;
