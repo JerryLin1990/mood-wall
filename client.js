@@ -155,31 +155,32 @@ function visualKeyPress(keyStr) {
     if (el) { el.classList.add('pressed'); setTimeout(() => el.classList.remove('pressed'), 100); }
 }
 
-/* IME Input Handling - Save state to avoid messing up composition */
+/* IME Input Handling */
 let isComposing = false;
-let savedValue = '';
+let justFinishedComposition = false; // Cooldown flag to prevent selectionchange interference
 
 hiddenInput.addEventListener('compositionstart', () => {
-    console.log('Composition started, saving value:', hiddenInput.value);
     isComposing = true;
-    savedValue = hiddenInput.value;
+    justFinishedComposition = false;
 });
 
 hiddenInput.addEventListener('compositionend', (e) => {
-    console.log('Composition ended, data:', e.data, 'value:', hiddenInput.value);
     isComposing = false;
+    justFinishedComposition = true;
 
-    const composedText = e.data || '';
-    hiddenInput.value = savedValue + composedText;
-
+    // Clear the cooldown flag after a short delay
     setTimeout(() => {
-        applyInputLimits();
-    }, 0);
+        justFinishedComposition = false;
+    }, 50);
 });
 
 hiddenInput.addEventListener('input', (e) => {
-    if (isComposing) return;
-    applyInputLimits();
+    if (isComposing) {
+        renderTypedText(hiddenInput.value);
+    } else {
+        // Use setTimeout to allow browser to settle cursor position after IME
+        setTimeout(applyInputLimits, 0);
+    }
 });
 
 /**
@@ -229,10 +230,11 @@ function renderTypedText(text) {
     typedText.style.color = '#2b2b2b';
 }
 
-// Update cursor position on movement
+// Update cursor position on movement, but ignore during/just after composition
 document.addEventListener('selectionchange', () => {
-    if (document.activeElement === hiddenInput) {
-        applyInputLimits(); // Or just renderTypedText(hiddenInput.value) but applyInputLimits is safe
+    // Don't interfere during composition or right after it finishes
+    if (document.activeElement === hiddenInput && !isComposing && !justFinishedComposition) {
+        applyInputLimits();
     }
 });
 
