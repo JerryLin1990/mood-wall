@@ -370,7 +370,9 @@ printBtn.addEventListener('click', () => {
     // Simple random within container width (adjusted for card width)
     const containerW = cardsLayer.clientWidth || window.innerWidth;
     const tx = Math.random() * (containerW - 100) + 10;
-    const ty = Math.random() * (window.innerHeight - 500) + 20;
+
+    // Random height (avoid bottom slightly but allowed to be low)
+    const ty = Math.random() * (window.innerHeight - 200) + 20;
     const rot = Math.random() * 10 - 5;
 
     cardsLayer.appendChild(cardEl);
@@ -517,9 +519,11 @@ function setupCardInteraction(cardEl, id, initialX, initialY, initialR) {
         if (x > maxX) x = maxX;
 
         // Y-axis constraints (Visual height roughly 410 * 0.25 = 102.5px)
+        // Y-axis constraints (Visual height roughly 410 * 0.25 = 102.5px)
         const containerH = cardsLayer.clientHeight;
+
         const minY = 0;
-        const maxY = containerH - 110; // 110px safe margin
+        const maxY = containerH - 110;
 
         if (y < minY) y = minY;
         if (y > maxY) y = maxY;
